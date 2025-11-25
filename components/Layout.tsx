@@ -22,8 +22,6 @@ const Layout: React.FC<LayoutProps> = ({
   siteConfig 
 }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  
-  // Modals
   const [isAdminModalOpen, setAdminModalOpen] = useState(false);
   const [isUserLoginModalOpen, setUserLoginModalOpen] = useState(false);
   
@@ -34,13 +32,11 @@ const Layout: React.FC<LayoutProps> = ({
 
   const location = useLocation();
 
-  // Public Navigation Items
   const navItems = [
     { name: 'Home', path: '/', icon: <Home size={20} /> },
     { name: 'Cart', path: '/cart', icon: <ShoppingBag size={20} /> },
   ];
 
-  // Admin Only Items
   const adminItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Admin', path: '/admin', icon: <Package size={20} /> },
@@ -73,107 +69,101 @@ const Layout: React.FC<LayoutProps> = ({
             setShowHeader(true);
         }
         setLastScrollY(window.scrollY);
+        if (isSidebarOpen) setSidebarOpen(false);
     };
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, [lastScrollY, isSidebarOpen]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     setSidebarOpen(false);
   }, [location.pathname]);
 
-  // Dynamic Theme Classes
-  const getThemeClasses = () => {
-    switch(siteConfig.theme) {
-        case 'dark': return 'bg-slate-900 text-slate-100';
-        case 'festive': return 'bg-red-50 text-slate-900';
-        case 'seasonal': return 'bg-orange-50 text-slate-900';
-        default: return 'bg-slate-50 text-slate-900';
-    }
-  };
-
-  const themeClass = getThemeClasses();
-  const headerClass = siteConfig.theme === 'dark' ? 'bg-slate-900/80 border-slate-800' : 'bg-white/80 border-slate-200';
-  const logoColor = siteConfig.theme === 'festive' ? 'bg-red-600' : 'bg-indigo-600';
-
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-500 ${themeClass} flex flex-col`}>
+    <div 
+      className="min-h-screen font-sans transition-colors duration-500 flex flex-col"
+      style={{
+        backgroundColor: siteConfig.colors.background,
+        color: siteConfig.colors.text,
+        '--color-primary': siteConfig.colors.primary,
+        '--color-bg': siteConfig.colors.background,
+        '--color-card': siteConfig.colors.card,
+        '--color-text': siteConfig.colors.text,
+        '--color-sidebar': siteConfig.colors.sidebar,
+        '--color-border': siteConfig.colors.border,
+      } as React.CSSProperties}
+    >
       
       {/* HEADER */}
-      <header className={`fixed top-0 left-0 right-0 backdrop-blur-md border-b z-40 transition-all duration-300 ${headerClass} ${showHeader ? 'translate-y-0' : '-translate-y-full'}`}>
+      <header className={`fixed top-0 left-0 right-0 backdrop-blur-md border-b z-40 transition-all duration-300 bg-[var(--color-sidebar)]/90 border-[var(--color-border)] ${showHeader ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-4">
-                <button onClick={toggleSidebar} className="lg:hidden p-2 hover:bg-slate-100 rounded-lg dark:hover:bg-slate-800">
+                <button onClick={toggleSidebar} className="lg:hidden p-2 hover:bg-[var(--color-bg)] rounded-lg text-[var(--color-text)]">
                     <Menu size={24} />
                 </button>
                 <Link to="/" className="text-xl font-bold flex items-center gap-2">
-                    {/* DYNAMIC LOGO LOGIC */}
                     {siteConfig.logoUrl ? (
                       <img src={siteConfig.logoUrl} alt="Store Logo" className="h-10 w-auto object-contain rounded-md" />
                     ) : (
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white ${logoColor}`}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white bg-[var(--color-primary)]`}>
                           <span className="font-mono font-bold">Pi</span>
                       </div>
                     )}
-                    <span className={siteConfig.theme === 'dark' ? 'text-white' : 'text-slate-900'}>{siteConfig.storeName}</span>
+                    <span className="text-[var(--color-text)]">{siteConfig.storeName}</span>
                 </Link>
             </div>
 
-            {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-6">
                 {navItems.map(item => (
-                    <Link key={item.path} to={item.path} className={`flex items-center gap-2 text-sm font-medium transition-colors ${location.pathname === item.path ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}>
+                    <Link key={item.path} to={item.path} className={`flex items-center gap-2 text-sm font-medium transition-colors ${location.pathname === item.path ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)] opacity-70 hover:opacity-100'}`}>
                         {item.icon} {item.name}
                     </Link>
                 ))}
                 {isAdmin && adminItems.map(item => (
-                     <Link key={item.path} to={item.path} className={`flex items-center gap-2 text-sm font-medium transition-colors ${location.pathname === item.path ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}>
+                     <Link key={item.path} to={item.path} className={`flex items-center gap-2 text-sm font-medium transition-colors ${location.pathname === item.path ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)] opacity-70 hover:opacity-100'}`}>
                         {item.icon} {item.name}
                     </Link>
                 ))}
             </nav>
 
             <div className="flex items-center gap-3">
-                 {/* User Login / Profile */}
                  {user ? (
-                   <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 py-1.5 px-3 rounded-full">
+                   <div className="flex items-center gap-2 bg-[var(--color-bg)] border border-[var(--color-border)] py-1.5 px-3 rounded-full">
                       {user.avatar ? (
                         <img src={user.avatar} alt="User" className="w-6 h-6 rounded-full" />
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold">
+                        <div className="w-6 h-6 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-xs font-bold">
                           {user.name.charAt(0)}
                         </div>
                       )}
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200 hidden md:block">{user.name}</span>
-                      <button onClick={onUserLogout} className="ml-2 text-slate-400 hover:text-red-500"><LogOut size={14} /></button>
+                      <span className="text-xs font-bold text-[var(--color-text)] hidden md:block">{user.name}</span>
+                      <button onClick={onUserLogout} className="ml-2 text-[var(--color-text)] opacity-50 hover:text-red-500 hover:opacity-100"><LogOut size={14} /></button>
                    </div>
                  ) : (
                    <button 
                     onClick={() => setUserLoginModalOpen(true)}
-                    className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-indigo-600 px-3 py-2 rounded-lg hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-1 text-sm font-medium text-[var(--color-text)] opacity-70 hover:text-[var(--color-primary)] hover:opacity-100 px-3 py-2 rounded-lg transition-colors"
                    >
                      <LogIn size={18} /> <span className="hidden sm:inline">Login</span>
                    </button>
                  )}
 
-                 {/* Admin Toggle */}
                  {isAdmin ? (
                     <button onClick={onAdminLogout} className="text-xs font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-red-100 transition-colors">
                         <LogOut size={14} /> Admin Exit
                     </button>
                  ) : (
-                    <button id="admin-login-trigger" onClick={() => setAdminModalOpen(true)} className="text-slate-400 hover:text-indigo-600 transition-colors p-2">
+                    <button id="admin-login-trigger" onClick={() => setAdminModalOpen(true)} className="text-[var(--color-text)] opacity-40 hover:text-[var(--color-primary)] hover:opacity-100 transition-colors p-2">
                         <Lock size={18} />
                     </button>
                  )}
 
-                 {/* Cart Icon */}
-                 <Link to="/cart" className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group">
-                    <ShoppingBag size={24} className="text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 transition-colors" />
+                 <Link to="/cart" className="relative p-2 hover:bg-[var(--color-bg)] rounded-lg transition-colors group">
+                    <ShoppingBag size={24} className="text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors" />
                     {cartCount > 0 && (
-                        <span className="absolute top-1 right-1 bg-indigo-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm animate-bounce-subtle">
+                        <span className="absolute top-1 right-1 bg-[var(--color-primary)] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm animate-bounce-subtle">
                             {cartCount}
                         </span>
                     )}
@@ -186,29 +176,29 @@ const Layout: React.FC<LayoutProps> = ({
       {isSidebarOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
               <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={toggleSidebar}></div>
-              <div className="absolute left-0 top-0 bottom-0 w-3/4 max-w-xs bg-white dark:bg-slate-800 shadow-2xl p-6 overflow-y-auto animate-slide-in-left">
+              <div className="absolute left-0 top-0 bottom-0 w-3/4 max-w-xs bg-[var(--color-sidebar)] shadow-2xl p-6 overflow-y-auto animate-slide-in-left border-r border-[var(--color-border)]">
                   <div className="flex justify-between items-center mb-8">
-                      <h2 className="text-2xl font-bold dark:text-white">Menu</h2>
-                      <button onClick={toggleSidebar} className="dark:text-white"><X size={24} /></button>
+                      <h2 className="text-2xl font-bold text-[var(--color-text)]">Menu</h2>
+                      <button onClick={toggleSidebar} className="text-[var(--color-text)]"><X size={24} /></button>
                   </div>
                   
                   {user && (
-                    <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-700 rounded-xl flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-lg">
+                    <div className="mb-8 p-4 bg-[var(--color-bg)] rounded-xl flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold text-lg">
                           {user.avatar ? <img src={user.avatar} className="w-full h-full rounded-full" /> : user.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-800 dark:text-white">{user.name}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-300">{user.email}</p>
+                          <p className="font-bold text-[var(--color-text)]">{user.name}</p>
+                          <p className="text-xs text-[var(--color-text)] opacity-60">{user.email}</p>
                         </div>
                     </div>
                   )}
 
                   <div className="space-y-6">
                       <div className="space-y-2">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Shop</p>
+                        <p className="text-xs font-bold text-[var(--color-text)] opacity-40 uppercase tracking-wider">Shop</p>
                         {navItems.map(item => (
-                            <Link key={item.path} to={item.path} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium">
+                            <Link key={item.path} to={item.path} className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-text)] font-medium">
                                 {item.icon} {item.name}
                             </Link>
                         ))}
@@ -216,9 +206,9 @@ const Layout: React.FC<LayoutProps> = ({
 
                       {isAdmin && (
                         <div className="space-y-2">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Management</p>
+                            <p className="text-xs font-bold text-[var(--color-text)] opacity-40 uppercase tracking-wider">Management</p>
                             {adminItems.map(item => (
-                                <Link key={item.path} to={item.path} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium">
+                                <Link key={item.path} to={item.path} className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-text)] font-medium">
                                     {item.icon} {item.name}
                                 </Link>
                             ))}
@@ -226,7 +216,7 @@ const Layout: React.FC<LayoutProps> = ({
                       )}
                       
                       {!user && (
-                         <button onClick={() => { setSidebarOpen(false); setUserLoginModalOpen(true); }} className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium">
+                         <button onClick={() => { setSidebarOpen(false); setUserLoginModalOpen(true); }} className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-text)] font-medium">
                              <LogIn size={20} /> Login / Sign up
                          </button>
                       )}
@@ -240,20 +230,20 @@ const Layout: React.FC<LayoutProps> = ({
         {children}
       </main>
       
-      {/* FOOTER - Community & Contact */}
-      <footer className={`${siteConfig.theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} border-t pt-10 pb-6`}>
+      {/* FOOTER */}
+      <footer className="border-t pt-10 pb-6 bg-[var(--color-sidebar)] border-[var(--color-border)]">
          <div className="max-w-7xl mx-auto px-4">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                  <div>
-                     <h3 className={`font-bold text-lg mb-4 ${siteConfig.theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>About {siteConfig.storeName}</h3>
-                     <p className={`text-sm ${siteConfig.theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                     <h3 className="font-bold text-lg mb-4 text-[var(--color-text)]">About {siteConfig.storeName}</h3>
+                     <p className="text-sm text-[var(--color-text)] opacity-60">
                          Your trusted destination for Raspberry Pi accessories, gadgets, and sustainable tech. 
                          Join our community for daily deals and tech support.
                      </p>
                  </div>
                  
                  <div>
-                     <h3 className={`font-bold text-lg mb-4 ${siteConfig.theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Join the Community</h3>
+                     <h3 className="font-bold text-lg mb-4 text-[var(--color-text)]">Join the Community</h3>
                      <div className="flex flex-col gap-3">
                          <a href={siteConfig.community.whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium">
                              <MessageCircle size={20} /> Join WhatsApp Group
@@ -265,17 +255,17 @@ const Layout: React.FC<LayoutProps> = ({
                  </div>
                  
                  <div>
-                    <h3 className={`font-bold text-lg mb-4 ${siteConfig.theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Secure Shopping</h3>
+                    <h3 className="font-bold text-lg mb-4 text-[var(--color-text)]">Secure Shopping</h3>
                     <div className="flex gap-2 mb-2">
-                        <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600">SSL Encrypted</div>
-                        <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600">Verified</div>
+                        <div className="px-2 py-1 bg-[var(--color-bg)] rounded text-xs font-bold text-[var(--color-text)] opacity-70">SSL Encrypted</div>
+                        <div className="px-2 py-1 bg-[var(--color-bg)] rounded text-xs font-bold text-[var(--color-text)] opacity-70">Verified</div>
                     </div>
-                    <p className={`text-xs ${siteConfig.theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <p className="text-xs text-[var(--color-text)] opacity-50">
                         All transactions are secure and encrypted. Delivery calculated from {siteConfig.origin.city}, {siteConfig.origin.country}.
                     </p>
                  </div>
              </div>
-             <div className={`text-center text-xs border-t pt-6 ${siteConfig.theme === 'dark' ? 'border-slate-800 text-slate-500' : 'border-slate-100 text-slate-400'}`}>
+             <div className="text-center text-xs border-t pt-6 text-[var(--color-text)] opacity-40 border-[var(--color-border)]">
                  &copy; {new Date().getFullYear()} {siteConfig.storeName}. Powered by Raspberry Pi & Gemini AI.
              </div>
          </div>
@@ -283,7 +273,7 @@ const Layout: React.FC<LayoutProps> = ({
 
       {/* AI CHAT FLOATING ACTION BUTTON */}
       {!location.pathname.includes('ai-assistant') && (
-        <Link to="/ai-assistant" className="fixed bottom-6 right-6 z-40 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2 group">
+        <Link to="/ai-assistant" className="fixed bottom-6 right-6 z-40 bg-[var(--color-primary)] hover:opacity-90 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2 group">
             <Bot size={24} />
             <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap font-bold text-sm">Ask AI</span>
         </Link>
@@ -291,20 +281,19 @@ const Layout: React.FC<LayoutProps> = ({
 
       {/* ADMIN LOGIN MODAL */}
       {isAdminModalOpen && (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm">
-              <div className="min-h-full flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 animate-scale-up relative">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+                <div className="bg-[var(--color-card)] rounded-2xl w-full max-w-sm shadow-2xl p-6 animate-scale-up relative border border-[var(--color-border)]">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-xl text-slate-900">Admin Access</h3>
-                        <button onClick={() => setAdminModalOpen(false)} className="text-slate-500"><X size={20} /></button>
+                        <h3 className="font-bold text-xl text-[var(--color-text)]">Admin Access</h3>
+                        <button onClick={() => setAdminModalOpen(false)} className="text-[var(--color-text)] opacity-50"><X size={20} /></button>
                     </div>
                     
                     <form onSubmit={handleAdminAuth} className="space-y-4">
                         <div>
-                            <label className="text-sm font-bold text-slate-700">Password</label>
+                            <label className="text-sm font-bold text-[var(--color-text)]">Password</label>
                             <input 
                               type="password" 
-                              className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 mt-1 focus:ring-2 focus:ring-indigo-600 outline-none text-slate-900"
+                              className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 mt-1 focus:ring-2 focus:ring-[var(--color-primary)] outline-none text-slate-900"
                               placeholder="••••••"
                               value={passwordInput}
                               onChange={(e) => setPasswordInput(e.target.value)}
@@ -312,31 +301,30 @@ const Layout: React.FC<LayoutProps> = ({
                             />
                             {loginError && <p className="text-red-500 text-xs mt-1">Incorrect password.</p>}
                         </div>
-                        <button type="submit" className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                        <button type="submit" className="w-full bg-[var(--color-primary)] text-white font-bold py-3 rounded-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2">
                             <Unlock size={18} /> Login
                         </button>
                     </form>
                     
-                    <div className="mt-4 pt-4 border-t border-slate-100 text-center">
-                        <p className="text-xs text-slate-400">Default password: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600 font-mono">admin123</code></p>
+                    <div className="mt-4 pt-4 border-t border-[var(--color-border)] text-center">
+                        <p className="text-xs text-[var(--color-text)] opacity-50">Default password: <code className="bg-[var(--color-bg)] px-1 py-0.5 rounded font-mono">admin123</code></p>
                     </div>
                 </div>
-              </div>
           </div>
       )}
 
       {/* USER LOGIN MODAL */}
       {isUserLoginModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm">
-             <div className="min-h-full flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-8 animate-scale-up relative text-center">
-                     <button onClick={() => setUserLoginModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+             <div className="min-h-full flex items-center justify-center w-full">
+                <div className="bg-[var(--color-card)] rounded-2xl w-full max-w-sm shadow-2xl p-8 animate-scale-up relative text-center border border-[var(--color-border)]">
+                     <button onClick={() => setUserLoginModalOpen(false)} className="absolute top-4 right-4 text-[var(--color-text)] opacity-40 hover:opacity-80"><X size={20} /></button>
                      
-                     <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                     <div className="w-16 h-16 bg-[var(--color-bg)] text-[var(--color-primary)] rounded-full flex items-center justify-center mx-auto mb-4">
                         <UserIcon size={32} />
                      </div>
-                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-                     <p className="text-slate-500 mb-8">Login to track orders and save your favorites.</p>
+                     <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Welcome Back</h2>
+                     <p className="text-[var(--color-text)] opacity-60 mb-8">Login to track orders and save your favorites.</p>
 
                      <div className="space-y-3">
                          <button 
@@ -354,13 +342,13 @@ const Layout: React.FC<LayoutProps> = ({
                          </button>
                      </div>
 
-                     <div className="my-6 flex items-center gap-3 text-slate-300">
-                        <div className="h-px bg-slate-200 flex-1"></div>
+                     <div className="my-6 flex items-center gap-3 text-[var(--color-text)] opacity-20">
+                        <div className="h-px bg-current flex-1"></div>
                         <span className="text-xs uppercase font-bold">Or</span>
-                        <div className="h-px bg-slate-200 flex-1"></div>
+                        <div className="h-px bg-current flex-1"></div>
                      </div>
 
-                     <button className="text-indigo-600 font-bold text-sm hover:underline flex items-center justify-center gap-1">
+                     <button className="text-[var(--color-primary)] font-bold text-sm hover:underline flex items-center justify-center gap-1">
                         <Mail size={16} /> Continue with Email
                      </button>
                 </div>

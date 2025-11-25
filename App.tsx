@@ -50,7 +50,15 @@ export default function App() {
     storeName: "PiShop AI",
     currency: 'USD',
     currencySymbol: '$',
-    theme: 'light',
+    themeMode: 'light',
+    colors: {
+      primary: '#4F46E5',    // Indigo-600
+      background: '#F8FAFC', // Slate-50
+      card: '#FFFFFF',       // White
+      text: '#0F172A',       // Slate-900
+      sidebar: '#FFFFFF',    // White
+      border: '#E2E8F0',     // Slate-200
+    },
     origin: {
         street: '123 Tech Park',
         city: 'San Francisco',
@@ -188,10 +196,7 @@ export default function App() {
     setIsAddressSet(true);
     
     try {
-      // Filter only enabled providers to send to the API simulation
       const activeProviders = deliveryProviders.filter(p => p.enabled);
-      
-      // PASS ORIGIN ADDRESS FOR ZONE CALCULATION
       const rates = await fetchDeliveryRates(shippingAddress, siteConfig.origin, activeProviders);
       
       setCalculatedDeliveryOptions(rates);
@@ -219,9 +224,6 @@ export default function App() {
     setCart([]);
     setSelectedDelivery(null);
     setPaymentOpen(false);
-    // Keep address for next time if it was typed, or use saved
-    
-    // Simulate Post-Purchase Communication
     alert(`Order #${orderId} Placed Successfully!`);
     
     setTimeout(() => {
@@ -243,7 +245,7 @@ export default function App() {
       case 'orange': return 'from-orange-500 to-red-600';
       case 'emerald': return 'from-emerald-500 to-teal-600';
       case 'rose': return 'from-rose-500 to-orange-500';
-      default: return 'from-indigo-500 to-purple-600'; // indigo
+      default: return 'from-indigo-500 to-purple-600';
     }
   };
 
@@ -251,17 +253,17 @@ export default function App() {
     <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-6 animate-fade-in">
         <div className="p-6 bg-red-100 text-red-600 rounded-full shadow-lg"><MapPin size={48} /></div>
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Restricted Access</h2>
-          <p className="text-slate-500 mt-2 max-w-md mx-auto">This secured area is for store administrators only. You must verify your identity to proceed.</p>
+          <h2 className="text-3xl font-bold text-[var(--color-text)]">Restricted Access</h2>
+          <p className="text-[var(--color-text)] opacity-60 mt-2 max-w-md mx-auto">This secured area is for store administrators only. You must verify your identity to proceed.</p>
         </div>
         
         <div className="flex gap-4">
-            <Link to="/" className="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            <Link to="/" className="px-6 py-3 bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text)] font-medium rounded-lg hover:opacity-80 transition-colors">
               Return Home
             </Link>
             <button 
               onClick={() => document.getElementById('admin-login-trigger')?.click()} 
-              className="px-6 py-3 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 shadow-md hover:shadow-lg transition-all"
+              className="px-6 py-3 bg-[var(--color-primary)] text-white font-bold rounded-lg hover:opacity-90 shadow-md hover:shadow-lg transition-all"
             >
               Login as Admin
             </button>
@@ -293,7 +295,7 @@ export default function App() {
                     <p className="text-indigo-100 mb-6 max-w-lg">{siteConfig.hero.subtitle}</p>
                     <button 
                       onClick={() => setSelectedCategory('All')} 
-                      className="bg-white text-slate-900 px-6 py-3 rounded-lg font-bold hover:bg-slate-50 transition-colors shadow-lg"
+                      className="bg-[var(--color-card)] text-[var(--color-text)] px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-colors shadow-lg"
                     >
                       {siteConfig.hero.buttonText}
                     </button>
@@ -302,10 +304,10 @@ export default function App() {
 
               {/* Dynamic Brand Ads Section */}
               <div className="space-y-3">
-                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Trusted Partners</h3>
+                 <h3 className="text-xs font-bold text-[var(--color-text)] opacity-40 uppercase tracking-widest">Trusted Partners</h3>
                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                     {siteConfig.brands.map((brand, i) => (
-                       <div key={i} className="min-w-[120px] h-16 bg-white border border-slate-100 rounded-lg flex items-center justify-center shadow-sm text-slate-400 font-bold hover:border-indigo-200 hover:text-indigo-600 transition-colors cursor-pointer">
+                       <div key={i} className="min-w-[120px] h-16 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg flex items-center justify-center shadow-sm text-[var(--color-text)] opacity-60 font-bold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:opacity-100 transition-colors cursor-pointer">
                           {brand}
                        </div>
                     ))}
@@ -313,11 +315,11 @@ export default function App() {
               </div>
 
               {/* Sticky Filter Bar */}
-              <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md py-4 border-b border-slate-200 transition-all shadow-sm -mx-4 px-4 md:-mx-8 md:px-8">
+              <div className="sticky top-0 z-30 bg-[var(--color-bg)]/90 backdrop-blur-md py-4 border-b border-[var(--color-border)] transition-all shadow-sm -mx-4 px-4 md:-mx-8 md:px-8">
                 <div className="flex flex-wrap gap-2">
                   <button 
                     onClick={() => setSelectedCategory('All')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${selectedCategory === 'All' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${selectedCategory === 'All' ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]' : 'bg-[var(--color-card)] text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]'}`}
                   >
                     All
                   </button>
@@ -325,7 +327,7 @@ export default function App() {
                     <button 
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${selectedCategory === cat ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${selectedCategory === cat ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]' : 'bg-[var(--color-card)] text-[var(--color-text)] border-[var(--color-border)] hover:border-[var(--color-primary)]'}`}
                     >
                       {cat}
                     </button>
@@ -347,7 +349,7 @@ export default function App() {
               
               {filteredProducts.length === 0 && (
                 <div className="text-center py-20">
-                  <p className="text-slate-500">No products found in this category.</p>
+                  <p className="text-[var(--color-text)] opacity-50">No products found in this category.</p>
                 </div>
               )}
 
@@ -379,17 +381,17 @@ export default function App() {
           <Route path="/cart" element={
             <div className="max-w-5xl mx-auto pb-20">
               <div className="flex items-center gap-4 mb-6">
-                 <Link to="/" className="p-2 hover:bg-slate-200 rounded-full transition-colors" aria-label="Back to Home">
-                    <Home size={24} className="text-slate-700"/>
+                 <Link to="/" className="p-2 hover:bg-[var(--color-card)] rounded-full transition-colors border border-transparent hover:border-[var(--color-border)]" aria-label="Back to Home">
+                    <Home size={24} className="text-[var(--color-text)]"/>
                  </Link>
-                 <h2 className="text-2xl font-bold text-slate-900">Checkout</h2>
+                 <h2 className="text-2xl font-bold text-[var(--color-text)]">Checkout</h2>
               </div>
               
               {cart.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
-                  <ShoppingCart className="mx-auto text-slate-300 mb-4" size={48} />
-                  <p className="text-slate-500 mb-6">Your cart is empty.</p>
-                  <Link to="/" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors">
+                <div className="text-center py-20 bg-[var(--color-card)] rounded-2xl border border-dashed border-[var(--color-border)]">
+                  <ShoppingCart className="mx-auto text-[var(--color-text)] opacity-30 mb-4" size={48} />
+                  <p className="text-[var(--color-text)] opacity-60 mb-6">Your cart is empty.</p>
+                  <Link to="/" className="inline-flex items-center gap-2 bg-[var(--color-primary)] text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity">
                      Continue Shopping
                   </Link>
                 </div>
@@ -398,13 +400,13 @@ export default function App() {
                   <div className="lg:col-span-2 space-y-6">
                     
                     {/* 1. SHIPPING ADDRESS */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="bg-[var(--color-card)] p-6 rounded-xl shadow-sm border border-[var(--color-border)]">
                         <div className="flex justify-between items-center mb-4">
-                           <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                              <MapPin size={20} className="text-indigo-600" /> Shipping Details
+                           <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2">
+                              <MapPin size={20} className="text-[var(--color-primary)]" /> Shipping Details
                            </h3>
                            {isAddressSet && (
-                             <button onClick={handleResetAddress} className="text-xs text-indigo-600 font-bold hover:underline">Edit</button>
+                             <button onClick={handleResetAddress} className="text-xs text-[var(--color-primary)] font-bold hover:underline">Edit</button>
                            )}
                         </div>
 
@@ -412,36 +414,36 @@ export default function App() {
                           <form onSubmit={handleCalculateShipping} className="space-y-4">
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                   <label className="text-xs font-bold text-slate-500 uppercase">Full Name</label>
-                                   <input type="text" required className="w-full bg-white border border-slate-300 rounded p-2 mt-1" value={shippingAddress.fullName} onChange={e => setShippingAddress({...shippingAddress, fullName: e.target.value})} />
+                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Full Name</label>
+                                   <input type="text" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.fullName} onChange={e => setShippingAddress({...shippingAddress, fullName: e.target.value})} />
                                 </div>
                                 <div>
-                                   <label className="text-xs font-bold text-slate-500 uppercase">Phone</label>
-                                   <input type="tel" required className="w-full bg-white border border-slate-300 rounded p-2 mt-1" value={shippingAddress.phone} onChange={e => setShippingAddress({...shippingAddress, phone: e.target.value})} />
+                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Phone</label>
+                                   <input type="tel" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.phone} onChange={e => setShippingAddress({...shippingAddress, phone: e.target.value})} />
                                 </div>
                                 <div className="md:col-span-2">
-                                   <label className="text-xs font-bold text-slate-500 uppercase">Street Address</label>
-                                   <input type="text" required className="w-full bg-white border border-slate-300 rounded p-2 mt-1" value={shippingAddress.street} onChange={e => setShippingAddress({...shippingAddress, street: e.target.value})} />
+                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Street Address</label>
+                                   <input type="text" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.street} onChange={e => setShippingAddress({...shippingAddress, street: e.target.value})} />
                                 </div>
                                 <div>
-                                   <label className="text-xs font-bold text-slate-500 uppercase">City</label>
-                                   <input type="text" required className="w-full bg-white border border-slate-300 rounded p-2 mt-1" value={shippingAddress.city} onChange={e => setShippingAddress({...shippingAddress, city: e.target.value})} />
+                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">City</label>
+                                   <input type="text" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.city} onChange={e => setShippingAddress({...shippingAddress, city: e.target.value})} />
                                 </div>
                                 <div>
-                                   <label className="text-xs font-bold text-slate-500 uppercase">Zip / Post Code</label>
-                                   <input type="text" required className="w-full bg-white border border-slate-300 rounded p-2 mt-1" value={shippingAddress.zipCode} onChange={e => setShippingAddress({...shippingAddress, zipCode: e.target.value})} />
+                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Zip / Post Code</label>
+                                   <input type="text" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.zipCode} onChange={e => setShippingAddress({...shippingAddress, zipCode: e.target.value})} />
                                 </div>
                              </div>
-                             <div className="bg-indigo-50 p-3 rounded-lg text-indigo-800 text-xs mt-2">
+                             <div className="bg-[var(--color-bg)] p-3 rounded-lg text-[var(--color-text)] text-xs mt-2 border border-[var(--color-border)]">
                                 <span className="font-bold">Note:</span> Shipping rates will be calculated based on distance from our warehouse in <strong>{siteConfig.origin.city}</strong>.
                              </div>
-                             <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors">
+                             <button type="submit" className="w-full bg-[var(--color-primary)] text-white py-3 rounded-lg font-bold hover:opacity-90 transition-opacity">
                                 Calculate Shipping Rates
                              </button>
                           </form>
                         ) : (
-                          <div className="text-sm text-slate-600">
-                             <p className="font-bold text-slate-900">{shippingAddress.fullName}</p>
+                          <div className="text-sm text-[var(--color-text)] opacity-80">
+                             <p className="font-bold">{shippingAddress.fullName}</p>
                              <p>{shippingAddress.street}</p>
                              <p>{shippingAddress.city}, {shippingAddress.zipCode}</p>
                              <p>{shippingAddress.phone}</p>
@@ -451,14 +453,14 @@ export default function App() {
 
                     {/* 2. DELIVERY METHODS */}
                     {isAddressSet && (
-                      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 animate-fade-in">
-                          <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                              <Truck size={20} className="text-indigo-600" /> Select Delivery
+                      <div className="bg-[var(--color-card)] p-6 rounded-xl shadow-sm border border-[var(--color-border)] animate-fade-in">
+                          <h3 className="font-bold text-[var(--color-text)] mb-4 flex items-center gap-2">
+                              <Truck size={20} className="text-[var(--color-primary)]" /> Select Delivery
                           </h3>
                           
                           {loadingRates ? (
-                             <div className="flex flex-col items-center justify-center py-8 text-slate-500">
-                                <Loader2 size={32} className="animate-spin mb-2 text-indigo-600" />
+                             <div className="flex flex-col items-center justify-center py-8 text-[var(--color-text)] opacity-50">
+                                <Loader2 size={32} className="animate-spin mb-2 text-[var(--color-primary)]" />
                                 <p>Fetching live rates from carriers...</p>
                              </div>
                           ) : (
@@ -471,24 +473,24 @@ export default function App() {
                                       key={option.id} 
                                       className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
                                         selectedDelivery?.id === option.id 
-                                          ? 'border-indigo-600 bg-indigo-50' 
-                                          : 'border-slate-100 hover:border-slate-300'
+                                          ? 'border-[var(--color-primary)] bg-[var(--color-bg)]' 
+                                          : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'
                                       }`}
                                     >
                                         <div className="flex items-center gap-3">
                                           <input 
                                             type="radio" 
                                             name="delivery"
-                                            className="accent-indigo-600 w-5 h-5"
+                                            className="accent-[var(--color-primary)] w-5 h-5"
                                             checked={selectedDelivery?.id === option.id}
                                             onChange={() => setSelectedDelivery(option)}
                                           />
                                           <div>
-                                            <p className="font-bold text-slate-800">{option.name}</p>
-                                            <p className="text-xs text-slate-500">{option.duration} via {option.provider}</p>
+                                            <p className="font-bold text-[var(--color-text)]">{option.name}</p>
+                                            <p className="text-xs text-[var(--color-text)] opacity-60">{option.duration} via {option.provider}</p>
                                           </div>
                                         </div>
-                                        <span className="font-bold text-slate-900">
+                                        <span className="font-bold text-[var(--color-text)]">
                                           {option.price === 0 ? 'Free' : `${siteConfig.currencySymbol}${option.price.toFixed(2)}`}
                                         </span>
                                     </label>
@@ -500,20 +502,20 @@ export default function App() {
                     )}
 
                     {/* 3. CART ITEMS */}
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4 opacity-75 hover:opacity-100 transition-opacity">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                           <h3 className="font-bold text-slate-700">Order Items</h3>
-                           <span className="text-xs text-slate-500">{cartCount} items</span>
+                    <div className="bg-[var(--color-card)] p-4 rounded-xl shadow-sm border border-[var(--color-border)] space-y-4 hover:opacity-100 transition-opacity">
+                        <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-2">
+                           <h3 className="font-bold text-[var(--color-text)]">Order Items</h3>
+                           <span className="text-xs text-[var(--color-text)] opacity-60">{cartCount} items</span>
                         </div>
                         {cart.map(item => (
                         <div key={item.id} className="flex items-center gap-4">
-                            <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg bg-slate-100" />
+                            <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg bg-[var(--color-bg)]" />
                             <div className="flex-1">
-                            <h3 className="font-bold text-slate-800 text-sm">{item.name}</h3>
-                            <p className="text-slate-500 text-xs">{siteConfig.currencySymbol}{item.price}</p>
+                            <h3 className="font-bold text-[var(--color-text)] text-sm">{item.name}</h3>
+                            <p className="text-[var(--color-text)] opacity-60 text-xs">{siteConfig.currencySymbol}{item.price}</p>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="font-mono bg-slate-100 px-2 py-1 rounded text-xs">Qty: {item.quantity}</span>
+                              <span className="font-mono bg-[var(--color-bg)] text-[var(--color-text)] px-2 py-1 rounded text-xs">Qty: {item.quantity}</span>
                               <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-600">
                                   <Trash2 size={16} />
                               </button>
@@ -525,20 +527,20 @@ export default function App() {
 
                   {/* Summary */}
                   <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 h-fit sticky top-24">
-                        <h3 className="font-bold text-slate-800 mb-4 text-lg">Order Summary</h3>
+                    <div className="bg-[var(--color-card)] p-6 rounded-xl shadow-sm border border-[var(--color-border)] h-fit sticky top-24">
+                        <h3 className="font-bold text-[var(--color-text)] mb-4 text-lg">Order Summary</h3>
                         <div className="space-y-3 mb-6">
-                            <div className="flex justify-between text-slate-600">
+                            <div className="flex justify-between text-[var(--color-text)] opacity-70">
                                 <span>Subtotal</span>
                                 <span>{siteConfig.currencySymbol}{cartSubTotal.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between text-slate-600">
+                            <div className="flex justify-between text-[var(--color-text)] opacity-70">
                                 <span>Shipping</span>
                                 <span className={shippingCost === 0 && selectedDelivery ? 'text-green-600 font-medium' : ''}>
                                     {!selectedDelivery ? '--' : shippingCost === 0 ? 'Free' : `${siteConfig.currencySymbol}${shippingCost.toFixed(2)}`}
                                 </span>
                             </div>
-                            <div className="border-t border-slate-100 pt-3 flex justify-between font-bold text-slate-900 text-lg">
+                            <div className="border-t border-[var(--color-border)] pt-3 flex justify-between font-bold text-[var(--color-text)] text-lg">
                                 <span>Total</span>
                                 <span>{siteConfig.currencySymbol}{cartTotal.toFixed(2)}</span>
                             </div>
@@ -547,12 +549,12 @@ export default function App() {
                         <button 
                             onClick={() => setPaymentOpen(true)}
                             disabled={!selectedDelivery}
-                            className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                            className="w-full bg-[var(--color-primary)] text-white py-4 rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mb-3"
                         >
                             {selectedDelivery ? 'Proceed to Payment' : 'Enter Address & Select Shipping'}
                         </button>
                         
-                         <Link to="/" className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                         <Link to="/" className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[var(--color-border)] font-medium text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-colors">
                            <ArrowLeft size={16} /> Continue Shopping
                         </Link>
                     </div>

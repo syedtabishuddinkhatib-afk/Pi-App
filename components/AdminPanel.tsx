@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Product, SiteConfig, PaymentSettings, DeliveryProviderConfig } from '../types';
-import { Trash2, Plus, Image as ImageIcon, Save, X, Pen, RefreshCw, Package, Megaphone, CreditCard, DollarSign, Layout, MonitorPlay, ToggleLeft, ToggleRight, Smartphone, Truck, Settings, Upload, List, Globe, BarChart3, Radio, Share2, MapPin, Users, Send, Loader2 } from 'lucide-react';
+import { Product, SiteConfig, PaymentSettings, DeliveryProviderConfig, ThemeColors } from '../types';
+import { Trash2, Plus, Image as ImageIcon, Save, X, Pen, RefreshCw, Package, Megaphone, CreditCard, DollarSign, Layout, MonitorPlay, ToggleLeft, ToggleRight, Smartphone, Truck, Settings, Upload, List, Globe, BarChart3, Radio, Share2, MapPin, Users, Send, Loader2, Palette } from 'lucide-react';
 import { syncCatalogToMeta } from '../services/socialSyncApi';
 
 interface AdminPanelProps {
@@ -221,6 +221,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }));
   };
 
+  // --- THEME COLOR HANDLER ---
+  const updateThemeColor = (colorKey: keyof ThemeColors, value: string) => {
+      setSiteConfig(prev => ({
+          ...prev,
+          themeMode: 'custom',
+          colors: {
+              ...prev.colors,
+              [colorKey]: value
+          }
+      }));
+  };
+
+  const applyPresetTheme = (mode: 'light' | 'dark' | 'festive' | 'matrix') => {
+      let colors: ThemeColors;
+      switch (mode) {
+          case 'dark':
+              colors = { primary: '#6366F1', background: '#0F172A', card: '#1E293B', text: '#F1F5F9', sidebar: '#1E293B', border: '#334155' };
+              break;
+          case 'festive':
+              colors = { primary: '#DC2626', background: '#FEF2F2', card: '#FFFFFF', text: '#450A0A', sidebar: '#FFFFFF', border: '#FECACA' };
+              break;
+          case 'matrix':
+              colors = { primary: '#00FF00', background: '#000000', card: '#111111', text: '#00FF00', sidebar: '#000000', border: '#003300' };
+              break;
+          default: // light
+              colors = { primary: '#4F46E5', background: '#F8FAFC', card: '#FFFFFF', text: '#0F172A', sidebar: '#FFFFFF', border: '#E2E8F0' };
+      }
+      setSiteConfig(prev => ({ ...prev, themeMode: mode === 'matrix' ? 'custom' : mode, colors }));
+  };
+
   const handleSocialSync = async () => {
     setIsSyncing(true);
     setLastSyncResult(null);
@@ -239,47 +269,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
        
        {/* SIDEBAR NAVIGATION */}
        <div className="w-full lg:w-64 flex flex-col gap-2 shrink-0">
-           <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100 mb-2">
-               <h2 className="text-lg font-bold text-slate-800">Admin Console</h2>
-               <p className="text-xs text-slate-500">v3.4.0 • Pi-Host</p>
+           <div className="p-4 bg-[var(--color-card)] rounded-xl shadow-sm border border-[var(--color-border)] mb-2">
+               <h2 className="text-lg font-bold text-[var(--color-text)]">Admin Console</h2>
+               <p className="text-xs text-[var(--color-text)] opacity-60">v3.5.0 • Pi-Host</p>
            </div>
            
-           <button 
-             onClick={() => setActiveTab('inventory')}
-             className={`p-4 rounded-xl text-left font-bold flex items-center gap-3 transition-all ${activeTab === 'inventory' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'}`}
-           >
-              <Package size={20} /> Inventory
-           </button>
-           <button 
-             onClick={() => setActiveTab('delivery')}
-             className={`p-4 rounded-xl text-left font-bold flex items-center gap-3 transition-all ${activeTab === 'delivery' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'}`}
-           >
-              <Truck size={20} /> Delivery APIs
-           </button>
-           <button 
-             onClick={() => setActiveTab('integrations')}
-             className={`p-4 rounded-xl text-left font-bold flex items-center gap-3 transition-all ${activeTab === 'integrations' ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'}`}
-           >
-              <BarChart3 size={20} /> Integrations
-           </button>
-           <button 
-             onClick={() => setActiveTab('marketing')}
-             className={`p-4 rounded-xl text-left font-bold flex items-center gap-3 transition-all ${activeTab === 'marketing' ? 'bg-pink-600 text-white shadow-lg shadow-pink-200' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'}`}
-           >
-              <Megaphone size={20} /> Marketing
-           </button>
-           <button 
-             onClick={() => setActiveTab('payments')}
-             className={`p-4 rounded-xl text-left font-bold flex items-center gap-3 transition-all ${activeTab === 'payments' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'}`}
-           >
-              <CreditCard size={20} /> Payments
-           </button>
-           <button 
-             onClick={() => setActiveTab('settings')}
-             className={`p-4 rounded-xl text-left font-bold flex items-center gap-3 transition-all ${activeTab === 'settings' ? 'bg-slate-800 text-white shadow-lg shadow-slate-200' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'}`}
-           >
-              <Settings size={20} /> Settings
-           </button>
+           {[
+             { id: 'inventory', label: 'Inventory', icon: <Package size={20} /> },
+             { id: 'delivery', label: 'Delivery APIs', icon: <Truck size={20} /> },
+             { id: 'integrations', label: 'Integrations', icon: <BarChart3 size={20} /> },
+             { id: 'marketing', label: 'Marketing', icon: <Megaphone size={20} /> },
+             { id: 'payments', label: 'Payments', icon: <CreditCard size={20} /> },
+             { id: 'settings', label: 'Settings', icon: <Settings size={20} /> }
+           ].map(tab => (
+               <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`p-4 rounded-xl text-left font-bold flex items-center gap-3 transition-all ${activeTab === tab.id ? 'bg-[var(--color-primary)] text-white shadow-lg' : 'bg-[var(--color-card)] text-[var(--color-text)] hover:opacity-80 border border-[var(--color-border)]'}`}
+               >
+                  {tab.icon} {tab.label}
+               </button>
+           ))}
        </div>
 
        {/* CONTENT AREA */}
@@ -288,15 +298,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* --- INVENTORY TAB --- */}
           {activeTab === 'inventory' && (
             <div className="space-y-6 animate-fade-in">
-                
-                {/* CATEGORY MANAGER */}
-                <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4"><List size={18} /> Manage Categories</h3>
+                <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm">
+                    <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2 mb-4"><List size={18} /> Manage Categories</h3>
                     <div className="flex flex-wrap gap-2 mb-4">
                         {categories.map(cat => (
-                            <span key={cat} className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
+                            <span key={cat} className="bg-[var(--color-bg)] text-[var(--color-text)] px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 border border-[var(--color-border)]">
                                 {cat}
-                                <button onClick={() => handleDeleteCategory(cat)} className="text-slate-400 hover:text-red-500"><X size={14} /></button>
+                                <button onClick={() => handleDeleteCategory(cat)} className="text-[var(--color-text)] opacity-50 hover:text-red-500"><X size={14} /></button>
                             </span>
                         ))}
                     </div>
@@ -306,51 +314,51 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             value={newCategoryName} 
                             onChange={(e) => setNewCategoryName(e.target.value)}
                             placeholder="New category name..."
-                            className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--color-primary)] outline-none text-slate-900"
                         />
-                        <button onClick={handleAddCategory} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-900">Add</button>
+                        <button onClick={handleAddCategory} className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90">Add</button>
                     </div>
                 </div>
 
-                <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                <div className="flex justify-between items-center bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900">Product List</h2>
-                        <p className="text-slate-500">Total Products: {products.length}</p>
+                        <h2 className="text-2xl font-bold text-[var(--color-text)]">Product List</h2>
+                        <p className="text-[var(--color-text)] opacity-60">Total Products: {products.length}</p>
                     </div>
                     <button 
                         onClick={() => { resetForm(); setIsFormOpen(true); }}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                        className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 transition-colors flex items-center gap-2"
                     >
                         <Plus size={18} /> Add Product
                     </button>
                 </div>
 
                 {/* PRODUCT TABLE */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-[var(--color-card)] rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50 border-b border-slate-200">
+                        <table className="w-full text-left text-[var(--color-text)]">
+                            <thead className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
                                 <tr>
-                                    <th className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider">Product</th>
-                                    <th className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider">Category</th>
-                                    <th className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider">Price</th>
-                                    <th className="p-4 font-bold text-slate-700 text-xs uppercase tracking-wider text-right">Actions</th>
+                                    <th className="p-4 font-bold text-xs uppercase tracking-wider opacity-60">Product</th>
+                                    <th className="p-4 font-bold text-xs uppercase tracking-wider opacity-60">Category</th>
+                                    <th className="p-4 font-bold text-xs uppercase tracking-wider opacity-60">Price</th>
+                                    <th className="p-4 font-bold text-xs uppercase tracking-wider opacity-60 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-[var(--color-border)]">
                                 {products.map(product => (
-                                    <tr key={product.id} className="hover:bg-slate-50 transition-colors">
+                                    <tr key={product.id} className="hover:bg-[var(--color-bg)] transition-colors">
                                         <td className="p-4 flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded bg-slate-100 border border-slate-200 overflow-hidden">
+                                            <div className="w-10 h-10 rounded bg-[var(--color-bg)] border border-[var(--color-border)] overflow-hidden">
                                                 <img src={product.image} alt="" className="w-full h-full object-cover" />
                                             </div>
-                                            <span className="font-bold text-slate-800">{product.name}</span>
+                                            <span className="font-bold">{product.name}</span>
                                         </td>
-                                        <td className="p-4"><span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">{product.category}</span></td>
-                                        <td className="p-4 font-mono text-slate-900">{siteConfig.currencySymbol}{product.price.toFixed(2)}</td>
+                                        <td className="p-4"><span className="text-xs font-bold bg-[var(--color-bg)] opacity-80 px-2 py-1 rounded">{product.category}</span></td>
+                                        <td className="p-4 font-mono">{siteConfig.currencySymbol}{product.price.toFixed(2)}</td>
                                         <td className="p-4 text-right flex justify-end gap-2">
-                                            <button onClick={() => handleEdit(product)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded"><Pen size={16}/></button>
-                                            <button onClick={() => handleDelete(product.id)} className="p-2 text-red-500 hover:bg-red-50 rounded"><Trash2 size={16}/></button>
+                                            <button onClick={() => handleEdit(product)} className="p-2 text-[var(--color-primary)] hover:bg-[var(--color-bg)] rounded"><Pen size={16}/></button>
+                                            <button onClick={() => handleDelete(product.id)} className="p-2 text-red-500 hover:bg-[var(--color-bg)] rounded"><Trash2 size={16}/></button>
                                         </td>
                                     </tr>
                                 ))}
@@ -364,40 +372,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* --- DELIVERY TAB (PROVIDERS) --- */}
           {activeTab === 'delivery' && (
               <div className="space-y-6 animate-fade-in">
-                   <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm mb-6 flex justify-between items-center">
+                   <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm mb-6 flex justify-between items-center">
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-900 mb-2">Delivery API Integrations</h2>
-                            <p className="text-slate-500">Manage connected shipping partners and custom delivery methods.</p>
+                            <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Delivery API Integrations</h2>
+                            <p className="text-[var(--color-text)] opacity-60">Manage connected shipping partners and custom delivery methods.</p>
                         </div>
                         <button 
                             onClick={() => setIsProviderFormOpen(true)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                            className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 transition-colors flex items-center gap-2"
                         >
                             <Plus size={18} /> Add New Service
                         </button>
                    </div>
 
                    {/* ORIGIN SETTINGS */}
-                   <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm mb-6">
-                        <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4"><MapPin size={20} className="text-blue-600"/> Shop Origin Address</h3>
-                        <p className="text-xs text-slate-500 mb-4">Shipping distance is calculated from this location.</p>
+                   <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm mb-6">
+                        <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2 mb-4"><MapPin size={20} className="text-[var(--color-primary)]"/> Shop Origin Address</h3>
+                        <p className="text-xs text-[var(--color-text)] opacity-60 mb-4">Shipping distance is calculated from this location.</p>
                         <div className="grid grid-cols-2 gap-4">
                              <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase">City</label>
+                                <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">City</label>
                                 <input 
                                     type="text" 
                                     value={siteConfig.origin.city}
                                     onChange={(e) => updateOrigin('city', e.target.value)}
-                                    className="w-full bg-white border border-slate-300 rounded p-2 mt-1"
+                                    className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900"
                                 />
                              </div>
                              <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase">Zip / Post Code</label>
+                                <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Zip / Post Code</label>
                                 <input 
                                     type="text" 
                                     value={siteConfig.origin.zipCode}
                                     onChange={(e) => updateOrigin('zipCode', e.target.value)}
-                                    className="w-full bg-white border border-slate-300 rounded p-2 mt-1"
+                                    className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900"
                                 />
                              </div>
                         </div>
@@ -405,9 +413,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                     <div className="grid grid-cols-1 gap-4">
                         {deliveryProviders.map(provider => (
-                             <div key={provider.id} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                             <div key={provider.id} className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex items-start gap-4 flex-1">
-                                    <div className={`p-3 rounded-lg ${provider.enabled ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                                    <div className={`p-3 rounded-lg ${provider.enabled ? 'bg-blue-100 text-blue-600' : 'bg-[var(--color-bg)] text-[var(--color-text)] opacity-50'}`}>
                                         <Truck size={24} />
                                     </div>
                                     <div className="flex-1 space-y-3">
@@ -416,19 +424,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                 type="text" 
                                                 value={provider.name}
                                                 onChange={(e) => updateProvider(provider.id, 'name', e.target.value)}
-                                                className="font-bold text-slate-800 text-lg bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none"
+                                                className="font-bold text-[var(--color-text)] text-lg bg-transparent border-b border-transparent hover:border-[var(--color-border)] focus:border-[var(--color-primary)] focus:outline-none"
                                             />
-                                            <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-mono">ID: {provider.id}</span>
+                                            <span className="text-xs bg-[var(--color-bg)] text-[var(--color-text)] opacity-60 px-2 py-0.5 rounded font-mono">ID: {provider.id}</span>
                                         </div>
                                         
-                                        <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                                        <div className="flex flex-wrap gap-4 text-sm text-[var(--color-text)] opacity-80">
                                             <div className="flex items-center gap-2">
                                                 <span>Base Rate:</span>
                                                 <input 
                                                     type="number" 
                                                     value={provider.baseRate}
                                                     onChange={(e) => updateProvider(provider.id, 'baseRate', parseFloat(e.target.value))}
-                                                    className="w-20 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-800"
+                                                    className="w-20 bg-white border border-slate-200 rounded px-2 py-1 text-slate-800"
                                                 />
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -437,7 +445,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                     type="number" 
                                                     value={provider.perKmRate}
                                                     onChange={(e) => updateProvider(provider.id, 'perKmRate', parseFloat(e.target.value))}
-                                                    className="w-20 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-800"
+                                                    className="w-20 bg-white border border-slate-200 rounded px-2 py-1 text-slate-800"
                                                 />
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -446,19 +454,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                     type="text" 
                                                     value={provider.speedLabel}
                                                     onChange={(e) => updateProvider(provider.id, 'speedLabel', e.target.value)}
-                                                    className="w-32 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-800"
+                                                    className="w-32 bg-white border border-slate-200 rounded px-2 py-1 text-slate-800"
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4 border-t pt-4 md:border-t-0 md:pt-0">
-                                    <button onClick={() => deleteProvider(provider.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                <div className="flex items-center gap-4 border-t border-[var(--color-border)] pt-4 md:border-t-0 md:pt-0">
+                                    <button onClick={() => deleteProvider(provider.id)} className="p-2 text-[var(--color-text)] opacity-40 hover:text-red-500 hover:opacity-100 transition-colors">
                                         <Trash2 size={20} />
                                     </button>
-                                    <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
+                                    <div className="h-8 w-px bg-[var(--color-border)] hidden md:block"></div>
                                     <button onClick={() => toggleProvider(provider.id)}>
-                                        {provider.enabled ? <ToggleRight className="text-blue-600 w-12 h-12" /> : <ToggleLeft className="text-slate-300 w-12 h-12" />}
+                                        {provider.enabled ? <ToggleRight className="text-[var(--color-primary)] w-12 h-12" /> : <ToggleLeft className="text-[var(--color-text)] opacity-30 w-12 h-12" />}
                                     </button>
                                 </div>
                              </div>
@@ -467,340 +475,44 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
           )}
 
-          {/* --- INTEGRATIONS TAB --- */}
-          {activeTab === 'integrations' && (
-              <div className="space-y-6 animate-fade-in">
-                  <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm mb-6">
-                      <h2 className="text-2xl font-bold text-slate-900 mb-2">External Integrations</h2>
-                      <p className="text-slate-500">Connect Google, Meta, and other third-party services.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* SOCIAL CATALOG SYNC */}
-                      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4 md:col-span-2">
-                          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-2">
-                              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
-                                  <Share2 size={24} />
-                              </div>
-                              <div>
-                                  <h3 className="font-bold text-slate-800">Catalog Sync Center</h3>
-                                  <p className="text-xs text-slate-500">Push your {products.length} products to Meta (Facebook & Instagram).</p>
-                              </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                              <div className="text-sm text-slate-600">
-                                  <p>Ensure a valid Pixel ID is set below.</p>
-                                  {lastSyncResult && (
-                                      <p className={`mt-2 font-bold ${lastSyncResult.startsWith('Error') ? 'text-red-500' : 'text-green-600'}`}>
-                                          {lastSyncResult}
-                                      </p>
-                                  )}
-                              </div>
-                              <button 
-                                onClick={handleSocialSync} 
-                                disabled={isSyncing || !siteConfig.integrations.metaPixelId}
-                                className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                              >
-                                {isSyncing ? <Loader2 className="animate-spin" size={18} /> : <Share2 size={18} />}
-                                {isSyncing ? 'Syncing...' : 'Sync Catalog Now'}
-                              </button>
-                          </div>
-                      </div>
-
-                      {/* GOOGLE ANALYTICS */}
-                      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
-                          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-2">
-                              <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
-                                  <BarChart3 size={24} />
-                              </div>
-                              <div>
-                                  <h3 className="font-bold text-slate-800">Google Analytics 4</h3>
-                                  <p className="text-xs text-slate-500">Track impressions and user activity</p>
-                              </div>
-                          </div>
-                          <div>
-                              <label className="text-xs font-bold text-slate-500 uppercase">Measurement ID</label>
-                              <input 
-                                  type="text" 
-                                  placeholder="G-XXXXXXXXXX"
-                                  value={siteConfig.integrations.googleAnalyticsId}
-                                  onChange={(e) => updateIntegration('googleAnalyticsId', e.target.value)}
-                                  className="w-full bg-white border border-slate-300 rounded p-3 mt-1 font-mono text-sm focus:ring-2 focus:ring-orange-500 outline-none"
-                              />
-                              <p className="text-xs text-slate-400 mt-2">Found in GA Admin {'>'} Data Streams.</p>
-                          </div>
-                      </div>
-
-                      {/* GOOGLE ADSENSE */}
-                      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
-                          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-2">
-                              <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                                  <DollarSign size={24} />
-                              </div>
-                              <div>
-                                  <h3 className="font-bold text-slate-800">Google AdSense</h3>
-                                  <p className="text-xs text-slate-500">Monetize with display ads</p>
-                              </div>
-                          </div>
-                          <div>
-                              <label className="text-xs font-bold text-slate-500 uppercase">Publisher ID</label>
-                              <input 
-                                  type="text" 
-                                  placeholder="pub-XXXXXXXXXXXXXXXX"
-                                  value={siteConfig.integrations.adSenseId}
-                                  onChange={(e) => updateIntegration('adSenseId', e.target.value)}
-                                  className="w-full bg-white border border-slate-300 rounded p-3 mt-1 font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                              />
-                              <p className="text-xs text-slate-400 mt-2">Found in AdSense Account Information.</p>
-                          </div>
-                      </div>
-
-                      {/* META PIXEL */}
-                      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4 md:col-span-2">
-                          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-2">
-                              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
-                                  <Globe size={24} />
-                              </div>
-                              <div>
-                                  <h3 className="font-bold text-slate-800">Meta Pixel (Facebook/Instagram)</h3>
-                                  <p className="text-xs text-slate-500">Track conversions from social ads</p>
-                              </div>
-                          </div>
-                          <div>
-                              <label className="text-xs font-bold text-slate-500 uppercase">Pixel ID</label>
-                              <input 
-                                  type="text" 
-                                  placeholder="123456789012345"
-                                  value={siteConfig.integrations.metaPixelId}
-                                  onChange={(e) => updateIntegration('metaPixelId', e.target.value)}
-                                  className="w-full bg-white border border-slate-300 rounded p-3 mt-1 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                              />
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          )}
-
-          {/* --- MARKETING TAB --- */}
-          {activeTab === 'marketing' && (
-            <div className="space-y-6 animate-fade-in">
-               <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm mb-6">
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Content Management</h2>
-                    <p className="text-slate-500">Control your homepage banners, ads, and branding.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* HERO BANNER EDIT */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
-                        <div className="flex items-center gap-2 text-indigo-600 font-bold border-b border-slate-100 pb-2 mb-2">
-                            <Layout size={20} /> Homepage Hero Banner
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">Title</label>
-                            <input 
-                                type="text" 
-                                value={siteConfig.hero.title}
-                                onChange={(e) => updateHero('title', e.target.value)}
-                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">Subtitle</label>
-                            <textarea 
-                                value={siteConfig.hero.subtitle}
-                                onChange={(e) => updateHero('subtitle', e.target.value)}
-                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 focus:ring-2 focus:ring-indigo-500 outline-none h-20"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">Theme</label>
-                            <select 
-                                value={siteConfig.hero.gradient}
-                                onChange={(e) => updateHero('gradient', e.target.value)}
-                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1"
-                            >
-                                <option value="indigo">Indigo/Purple (Default)</option>
-                                <option value="orange">Orange/Red (Summer)</option>
-                                <option value="emerald">Emerald/Teal (Eco)</option>
-                                <option value="rose">Rose/Pink (Valentines)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* COMMUNITY LINKS */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
-                         <div className="flex items-center gap-2 text-green-600 font-bold border-b border-slate-100 pb-2 mb-2">
-                            <Users size={20} /> Community Groups
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">WhatsApp Group Link</label>
-                            <input 
-                                type="text" 
-                                placeholder="https://chat.whatsapp.com/..."
-                                value={siteConfig.community.whatsapp}
-                                onChange={(e) => updateCommunity('whatsapp', e.target.value)}
-                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 focus:ring-2 focus:ring-green-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">Telegram Channel Link</label>
-                            <input 
-                                type="text" 
-                                placeholder="https://t.me/..."
-                                value={siteConfig.community.telegram}
-                                onChange={(e) => updateCommunity('telegram', e.target.value)}
-                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 focus:ring-2 focus:ring-blue-400 outline-none"
-                            />
-                        </div>
-                    </div>
-
-                    {/* VIDEO AD EDIT */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
-                            <div className="flex items-center gap-2 text-pink-600 font-bold">
-                                <MonitorPlay size={20} /> Video Ad Slot
-                            </div>
-                            <button onClick={() => updateVideoAd('enabled', !siteConfig.videoAd.enabled)}>
-                                {siteConfig.videoAd.enabled ? <ToggleRight className="text-green-500" size={32} /> : <ToggleLeft className="text-slate-300" size={32} />}
-                            </button>
-                        </div>
-                        
-                        <div className={!siteConfig.videoAd.enabled ? 'opacity-50 pointer-events-none' : ''}>
-                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase">Campaign Title</label>
-                                <input 
-                                    type="text" 
-                                    value={siteConfig.videoAd.title}
-                                    onChange={(e) => updateVideoAd('title', e.target.value)}
-                                    className="w-full bg-white border border-slate-300 rounded p-2 mt-1"
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <label className="text-xs font-bold text-slate-500 uppercase">Thumbnail URL</label>
-                                <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        value={siteConfig.videoAd.imageUrl}
-                                        onChange={(e) => updateVideoAd('imageUrl', e.target.value)}
-                                        className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-sm text-slate-600"
-                                    />
-                                    <button 
-                                        onClick={() => updateVideoAd('imageUrl', `https://picsum.photos/1200/400?random=${Date.now()}`)}
-                                        className="mt-1 p-2 bg-slate-100 rounded hover:bg-slate-200"
-                                    >
-                                        <RefreshCw size={18} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* BRANDS EDIT */}
-                    <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4 md:col-span-2">
-                        <div className="flex items-center gap-2 text-slate-800 font-bold border-b border-slate-100 pb-2 mb-2">
-                            <Package size={20} /> Partner Brands (Comma Separated)
-                        </div>
-                        <textarea 
-                            value={siteConfig.brands.join(', ')}
-                            onChange={(e) => updateBrands(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg p-3 font-mono text-sm h-24 focus:ring-2 focus:ring-indigo-500 outline-none"
-                        />
-                        <p className="text-xs text-slate-400">Example: Apple, Samsung, Sony, Bose</p>
-                    </div>
-                </div>
-            </div>
-          )}
-
-          {/* --- PAYMENTS TAB --- */}
-          {activeTab === 'payments' && (
-            <div className="space-y-6 animate-fade-in">
-               <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm mb-6">
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Payment Gateways</h2>
-                    <p className="text-slate-500">Configure accepted payment methods and API keys.</p>
-                </div>
-
-                <div className="space-y-4">
-                    {paymentSettings.gateways.map(gateway => (
-                        <div key={gateway.id} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center">
-                            <div className={`p-3 rounded-xl ${gateway.enabled ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                                <DollarSign size={24} />
-                            </div>
-                            
-                            <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h3 className="font-bold text-lg text-slate-800">{gateway.name}</h3>
-                                    <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-mono uppercase">{gateway.type}</span>
-                                </div>
-                                <p className="text-sm text-slate-500">
-                                    {gateway.enabled ? 'Currently active and accepting payments.' : 'Disabled at checkout.'}
-                                </p>
-                            </div>
-
-                            {gateway.enabled && (
-                                <div className="w-full md:w-64">
-                                     <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">API Key / Merchant ID</label>
-                                     <input 
-                                        type="password" 
-                                        value={gateway.apiKey || ''}
-                                        onChange={(e) => updateApiKey(gateway.id, e.target.value)}
-                                        placeholder="pk_test_..."
-                                        className="w-full border border-slate-200 bg-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                                     />
-                                </div>
-                            )}
-
-                            <button onClick={() => toggleGateway(gateway.id)} className="shrink-0">
-                                {gateway.enabled ? <ToggleRight className="text-emerald-500 w-12 h-12 hover:opacity-80 transition-opacity" /> : <ToggleLeft className="text-slate-300 w-12 h-12 hover:text-slate-400 transition-colors" />}
-                            </button>
-                        </div>
-                    ))}
-                    
-                    <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex items-center gap-3 text-indigo-800 text-sm">
-                        <Smartphone size={20} />
-                        <p><strong>Dev Note:</strong> Changes to payment settings reflect immediately in the user checkout modal.</p>
-                    </div>
-                </div>
-            </div>
-          )}
-
-          {/* --- SETTINGS TAB --- */}
+          {/* --- SETTINGS TAB (THEME & BRANDING) --- */}
           {activeTab === 'settings' && (
               <div className="space-y-6 animate-fade-in">
-                  <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm mb-6">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2">General Settings</h2>
-                        <p className="text-slate-500">Configure store identity, currency, and themes.</p>
+                  <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm mb-6">
+                        <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">General Settings</h2>
+                        <p className="text-[var(--color-text)] opacity-60">Configure store identity, currency, and customized themes.</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* BRANDING SECTION */}
-                      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
-                          <h3 className="font-bold text-slate-800 flex items-center gap-2"><Package size={18}/> Branding</h3>
+                      <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm space-y-4">
+                          <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2"><Package size={18}/> Branding</h3>
                           <div>
-                              <label className="text-xs font-bold text-slate-500 uppercase">Store Name</label>
+                              <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Store Name</label>
                               <input 
                                 type="text" 
                                 value={siteConfig.storeName}
                                 onChange={(e) => setSiteConfig({...siteConfig, storeName: e.target.value})}
-                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 focus:ring-2 focus:ring-indigo-500"
+                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 focus:ring-2 focus:ring-[var(--color-primary)] text-slate-900"
                               />
                           </div>
                           
                           {/* LOGO UPLOADER */}
                           <div>
-                              <label className="text-xs font-bold text-slate-500 uppercase">Store Logo</label>
+                              <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Store Logo</label>
                               <div className="mt-2 flex items-start gap-4">
-                                  <div className="w-20 h-20 rounded-lg bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                                  <div className="w-20 h-20 rounded-lg bg-[var(--color-bg)] border-2 border-dashed border-[var(--color-border)] flex items-center justify-center overflow-hidden shrink-0">
                                       {siteConfig.logoUrl ? (
                                         <img src={siteConfig.logoUrl} alt="Logo" className="w-full h-full object-contain" />
                                       ) : (
-                                        <ImageIcon className="text-slate-300" />
+                                        <ImageIcon className="text-[var(--color-text)] opacity-30" />
                                       )}
                                   </div>
                                   <div className="flex-1">
                                       <input 
                                         type="text" 
                                         placeholder="Image URL..." 
-                                        className="w-full bg-white border border-slate-300 rounded p-2 text-sm mb-2"
+                                        className="w-full bg-white border border-slate-300 rounded p-2 text-sm mb-2 text-slate-900"
                                         value={siteConfig.logoUrl || ''}
                                         onChange={(e) => setSiteConfig({...siteConfig, logoUrl: e.target.value})}
                                       />
@@ -811,7 +523,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                             onChange={handleLogoUpload}
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                           />
-                                          <button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2 rounded text-sm flex items-center justify-center gap-2 transition-colors">
+                                          <button className="w-full bg-[var(--color-bg)] hover:opacity-80 text-[var(--color-text)] font-bold py-2 rounded text-sm flex items-center justify-center gap-2 transition-opacity border border-[var(--color-border)]">
                                             <Upload size={14} /> Upload Image
                                           </button>
                                       </div>
@@ -820,14 +532,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </div>
                       </div>
 
-                      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
-                          <h3 className="font-bold text-slate-800 flex items-center gap-2"><DollarSign size={18}/> Currency</h3>
+                      {/* CURRENCY SECTION */}
+                      <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm space-y-4">
+                          <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2"><DollarSign size={18}/> Currency</h3>
                           <div>
-                              <label className="text-xs font-bold text-slate-500 uppercase">Base Currency</label>
+                              <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Base Currency</label>
                               <select 
                                 value={siteConfig.currency}
                                 onChange={(e) => handleCurrencyChange(e.target.value as any)}
-                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1"
+                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900"
                               >
                                   <option value="USD">USD ($) - US Dollar</option>
                                   <option value="INR">INR (₹) - Indian Rupee</option>
@@ -837,18 +550,78 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </div>
                       </div>
 
-                      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4 md:col-span-2">
-                          <h3 className="font-bold text-slate-800 flex items-center gap-2"><Layout size={18}/> Appearance Theme</h3>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {['light', 'dark', 'festive', 'seasonal'].map(theme => (
-                                    <button 
-                                        key={theme}
-                                        onClick={() => setSiteConfig({...siteConfig, theme: theme as any})}
-                                        className={`p-4 rounded-xl border-2 text-center capitalize font-bold transition-all ${siteConfig.theme === theme ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 hover:border-slate-300 text-slate-600'}`}
-                                    >
-                                        {theme}
-                                    </button>
-                                ))}
+                      {/* APPEARANCE SECTION - REBUILT FOR CUSTOM COLORS */}
+                      <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm space-y-4 md:col-span-2">
+                          <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2"><Palette size={18}/> Appearance Theme</h3>
+                          
+                          {/* QUICK PRESETS */}
+                          <div>
+                              <p className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase mb-2">Quick Presets</p>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                    {[
+                                        { id: 'light', label: 'Light' },
+                                        { id: 'dark', label: 'Dark' },
+                                        { id: 'festive', label: 'Festive' },
+                                        { id: 'matrix', label: 'Matrix' },
+                                    ].map(theme => (
+                                        <button 
+                                            key={theme.id}
+                                            onClick={() => applyPresetTheme(theme.id as any)}
+                                            className={`p-3 rounded-xl border-2 text-center capitalize font-bold transition-all ${siteConfig.themeMode === theme.id ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white' : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)]'}`}
+                                        >
+                                            {theme.label}
+                                        </button>
+                                    ))}
+                              </div>
+                          </div>
+
+                          {/* CUSTOM COLOR PICKERS */}
+                          <div>
+                              <p className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase mb-3">Custom Color Palette</p>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                                  <div>
+                                      <label className="text-[10px] uppercase font-bold text-[var(--color-text)] opacity-50 block mb-1">Primary</label>
+                                      <div className="flex items-center gap-2">
+                                          <input type="color" value={siteConfig.colors.primary} onChange={(e) => updateThemeColor('primary', e.target.value)} className="w-8 h-8 rounded cursor-pointer border-none p-0" />
+                                          <span className="text-xs font-mono text-[var(--color-text)]">{siteConfig.colors.primary}</span>
+                                      </div>
+                                  </div>
+                                   <div>
+                                      <label className="text-[10px] uppercase font-bold text-[var(--color-text)] opacity-50 block mb-1">Background</label>
+                                      <div className="flex items-center gap-2">
+                                          <input type="color" value={siteConfig.colors.background} onChange={(e) => updateThemeColor('background', e.target.value)} className="w-8 h-8 rounded cursor-pointer border-none p-0" />
+                                          <span className="text-xs font-mono text-[var(--color-text)]">{siteConfig.colors.background}</span>
+                                      </div>
+                                  </div>
+                                  <div>
+                                      <label className="text-[10px] uppercase font-bold text-[var(--color-text)] opacity-50 block mb-1">Card / Panel</label>
+                                      <div className="flex items-center gap-2">
+                                          <input type="color" value={siteConfig.colors.card} onChange={(e) => updateThemeColor('card', e.target.value)} className="w-8 h-8 rounded cursor-pointer border-none p-0" />
+                                          <span className="text-xs font-mono text-[var(--color-text)]">{siteConfig.colors.card}</span>
+                                      </div>
+                                  </div>
+                                  <div>
+                                      <label className="text-[10px] uppercase font-bold text-[var(--color-text)] opacity-50 block mb-1">Text Color</label>
+                                      <div className="flex items-center gap-2">
+                                          <input type="color" value={siteConfig.colors.text} onChange={(e) => updateThemeColor('text', e.target.value)} className="w-8 h-8 rounded cursor-pointer border-none p-0" />
+                                          <span className="text-xs font-mono text-[var(--color-text)]">{siteConfig.colors.text}</span>
+                                      </div>
+                                  </div>
+                                  <div>
+                                      <label className="text-[10px] uppercase font-bold text-[var(--color-text)] opacity-50 block mb-1">Sidebar</label>
+                                      <div className="flex items-center gap-2">
+                                          <input type="color" value={siteConfig.colors.sidebar} onChange={(e) => updateThemeColor('sidebar', e.target.value)} className="w-8 h-8 rounded cursor-pointer border-none p-0" />
+                                          <span className="text-xs font-mono text-[var(--color-text)]">{siteConfig.colors.sidebar}</span>
+                                      </div>
+                                  </div>
+                                  <div>
+                                      <label className="text-[10px] uppercase font-bold text-[var(--color-text)] opacity-50 block mb-1">Border</label>
+                                      <div className="flex items-center gap-2">
+                                          <input type="color" value={siteConfig.colors.border} onChange={(e) => updateThemeColor('border', e.target.value)} className="w-8 h-8 rounded cursor-pointer border-none p-0" />
+                                          <span className="text-xs font-mono text-[var(--color-text)]">{siteConfig.colors.border}</span>
+                                      </div>
+                                  </div>
+                              </div>
                           </div>
                       </div>
                   </div>
@@ -859,59 +632,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {/* --- ADD NEW DELIVERY SERVICE MODAL --- */}
       {isProviderFormOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl animate-scale-up">
-                 <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                    <h3 className="font-bold text-xl text-slate-900">Add Delivery Integration</h3>
-                    <button onClick={() => setIsProviderFormOpen(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 text-slate-500"><X size={20}/></button>
+            <div className="bg-[var(--color-card)] p-6 rounded-2xl w-full max-w-md shadow-2xl animate-scale-up border border-[var(--color-border)]">
+                 <div className="flex justify-between items-center mb-6 border-b border-[var(--color-border)] pb-4">
+                    <h3 className="font-bold text-xl text-[var(--color-text)]">Add Delivery Integration</h3>
+                    <button onClick={() => setIsProviderFormOpen(false)} className="p-2 bg-[var(--color-bg)] rounded-full hover:opacity-80 text-[var(--color-text)] opacity-50"><X size={20}/></button>
                 </div>
                 <form onSubmit={handleAddProvider} className="space-y-4">
                     <div>
-                        <label className="text-sm font-bold text-slate-700">Service Name</label>
+                        <label className="text-sm font-bold text-[var(--color-text)]">Service Name</label>
                         <input 
                             type="text" 
                             required 
                             placeholder="e.g., HyperLocal Drone"
-                            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 mt-1"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 mt-1 text-slate-900"
                             value={providerForm.name} 
                             onChange={e => setProviderForm({...providerForm, name: e.target.value})} 
                         />
                     </div>
+                    {/* ... (rest of provider form inputs) ... */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                             <label className="text-sm font-bold text-slate-700">Base Rate</label>
+                             <label className="text-sm font-bold text-[var(--color-text)]">Base Rate</label>
                              <input 
                                 type="number" 
                                 required 
                                 min="0"
-                                className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 mt-1"
+                                className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 mt-1 text-slate-900"
                                 value={providerForm.baseRate} 
                                 onChange={e => setProviderForm({...providerForm, baseRate: parseFloat(e.target.value)})} 
                              />
                         </div>
                          <div>
-                             <label className="text-sm font-bold text-slate-700">Per KM Rate</label>
+                             <label className="text-sm font-bold text-[var(--color-text)]">Per KM Rate</label>
                              <input 
                                 type="number" 
                                 required 
                                 min="0" step="0.1"
-                                className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 mt-1"
+                                className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 mt-1 text-slate-900"
                                 value={providerForm.perKmRate} 
                                 onChange={e => setProviderForm({...providerForm, perKmRate: parseFloat(e.target.value)})} 
                              />
                         </div>
                     </div>
                     <div>
-                        <label className="text-sm font-bold text-slate-700">Speed Label</label>
+                        <label className="text-sm font-bold text-[var(--color-text)]">Speed Label</label>
                         <input 
                             type="text" 
                             required 
                             placeholder="e.g., 30-45 Mins"
-                            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 mt-1"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 mt-1 text-slate-900"
                             value={providerForm.speedLabel} 
                             onChange={e => setProviderForm({...providerForm, speedLabel: e.target.value})} 
                         />
                     </div>
-                    <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 mt-2">
+                    <button type="submit" className="w-full bg-[var(--color-primary)] text-white font-bold py-3 rounded-lg hover:opacity-90 mt-2">
                         Create Service
                     </button>
                 </form>
@@ -922,40 +696,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {/* --- ADD/EDIT PRODUCT MODAL --- */}
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl animate-scale-up max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                    <h3 className="font-bold text-xl text-slate-900">{editingId ? 'Edit Product' : 'New Product'}</h3>
-                    <button onClick={resetForm} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 text-slate-500"><X size={20}/></button>
+            <div className="bg-[var(--color-card)] p-6 rounded-2xl w-full max-w-2xl shadow-2xl animate-scale-up max-h-[90vh] overflow-y-auto border border-[var(--color-border)]">
+                <div className="flex justify-between items-center mb-6 border-b border-[var(--color-border)] pb-4">
+                    <h3 className="font-bold text-xl text-[var(--color-text)]">{editingId ? 'Edit Product' : 'New Product'}</h3>
+                    <button onClick={resetForm} className="p-2 bg-[var(--color-bg)] rounded-full hover:opacity-80 text-[var(--color-text)] opacity-50"><X size={20}/></button>
                 </div>
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Name</label>
-                        <input type="text" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                        <label className="text-sm font-bold text-[var(--color-text)]">Name</label>
+                        <input type="text" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Category</label>
-                        <select className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                        <label className="text-sm font-bold text-[var(--color-text)]">Category</label>
+                        <select className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                             {categories.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Price ({siteConfig.currencySymbol})</label>
-                        <input type="number" required min="0" step="0.01" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2" value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} />
+                        <label className="text-sm font-bold text-[var(--color-text)]">Price ({siteConfig.currencySymbol})</label>
+                        <input type="number" required min="0" step="0.01" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900" value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Stock</label>
-                        <input type="number" required min="0" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2" value={formData.stock} onChange={e => setFormData({...formData, stock: parseInt(e.target.value)})} />
+                        <label className="text-sm font-bold text-[var(--color-text)]">Stock</label>
+                        <input type="number" required min="0" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900" value={formData.stock} onChange={e => setFormData({...formData, stock: parseInt(e.target.value)})} />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm font-bold text-slate-700">Image URL</label>
+                        <label className="text-sm font-bold text-[var(--color-text)]">Image URL</label>
                         <div className="flex gap-2">
-                             <input type="text" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
-                             <button type="button" onClick={() => setFormData({...formData, image: `https://picsum.photos/400/400?random=${Date.now()}`})} className="bg-slate-100 px-3 rounded border border-slate-200"><RefreshCw size={16}/></button>
+                             <input type="text" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm text-slate-900" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+                             <button type="button" onClick={() => setFormData({...formData, image: `https://picsum.photos/400/400?random=${Date.now()}`})} className="bg-[var(--color-bg)] px-3 rounded border border-[var(--color-border)] text-[var(--color-text)]"><RefreshCw size={16}/></button>
                         </div>
                     </div>
-                    <div className="md:col-span-2 pt-4 flex justify-end gap-3 border-t border-slate-100">
-                        <button type="button" onClick={resetForm} className="px-6 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium">Cancel</button>
-                        <button type="submit" className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 flex items-center gap-2"><Save size={18} /> Save</button>
+                    <div className="md:col-span-2 pt-4 flex justify-end gap-3 border-t border-[var(--color-border)]">
+                        <button type="button" onClick={resetForm} className="px-6 py-2 text-[var(--color-text)] opacity-70 hover:opacity-100 rounded-lg font-medium">Cancel</button>
+                        <button type="submit" className="px-6 py-2 bg-[var(--color-primary)] text-white font-bold rounded-lg hover:opacity-90 flex items-center gap-2"><Save size={18} /> Save</button>
                     </div>
                 </form>
             </div>

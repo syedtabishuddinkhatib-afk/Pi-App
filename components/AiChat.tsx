@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import { ChatMessage } from '../types';
@@ -53,7 +54,7 @@ const AiChat: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+    <div className="h-[calc(100vh-140px)] flex flex-col bg-[var(--color-card)] rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden">
       <div className="bg-slate-900 p-4 flex items-center gap-3">
         <div className="p-2 bg-indigo-500 rounded-lg">
            <Bot className="text-white" size={24} />
@@ -64,12 +65,12 @@ const AiChat: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[var(--color-bg)]">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
             <div className={`
               w-8 h-8 rounded-full flex items-center justify-center shrink-0
-              ${msg.role === 'user' ? 'bg-slate-200 text-slate-600' : 'bg-indigo-100 text-indigo-600'}
+              ${msg.role === 'user' ? 'bg-[var(--color-border)] text-[var(--color-text)]' : 'bg-[var(--color-primary)] text-white'}
             `}>
               {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
             </div>
@@ -77,8 +78,8 @@ const AiChat: React.FC = () => {
             <div className={`
               max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap
               ${msg.role === 'user' 
-                ? 'bg-slate-800 text-white rounded-tr-none' 
-                : 'bg-white text-slate-700 shadow-sm border border-slate-100 rounded-tl-none'}
+                ? 'bg-[var(--color-sidebar)] text-[var(--color-text)] border border-[var(--color-border)] rounded-tr-none' 
+                : 'bg-[var(--color-card)] text-[var(--color-text)] shadow-sm border border-[var(--color-border)] rounded-tl-none'}
             `}>
               {msg.text}
             </div>
@@ -86,30 +87,30 @@ const AiChat: React.FC = () => {
         ))}
         {loading && (
           <div className="flex gap-3">
-             <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+             <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center shrink-0">
                 <Bot size={16} />
              </div>
-             <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 flex items-center gap-2">
-                <Loader2 className="animate-spin text-indigo-600" size={16} />
-                <span className="text-xs text-slate-500">Thinking...</span>
+             <div className="bg-[var(--color-card)] p-3 rounded-2xl rounded-tl-none shadow-sm border border-[var(--color-border)] flex items-center gap-2">
+                <Loader2 className="animate-spin text-[var(--color-primary)]" size={16} />
+                <span className="text-xs text-[var(--color-text)] opacity-50">Thinking...</span>
              </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSend} className="p-4 bg-white border-t border-slate-100 flex gap-2">
+      <form onSubmit={handleSend} className="p-4 bg-[var(--color-card)] border-t border-[var(--color-border)] flex gap-2">
         <input 
           type="text" 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about products (e.g., 'Best headphones for travel?')"
-          className="flex-1 bg-white border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+          className="flex-1 bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
         />
         <button 
           type="submit"
           disabled={!input.trim() || loading}
-          className="bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[var(--color-primary)] text-white p-3 rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send size={20} />
         </button>

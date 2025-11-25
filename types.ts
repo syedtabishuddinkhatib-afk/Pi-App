@@ -3,7 +3,7 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  category: string; // Changed from enum to string for dynamic categories
+  category: string;
   description: string;
   image: string;
   rating: number;
@@ -59,12 +59,10 @@ export interface DeliveryProviderConfig {
   id: string;
   name: string;
   enabled: boolean;
-  baseRate: number; // Base cost for simulation
-  perKmRate: number; // Multiplier for simulation
+  baseRate: number; 
+  perKmRate: number; 
   speedLabel: string;
 }
-
-// --- NEW CONFIGURATION TYPES ---
 
 export interface HeroConfig {
   title: string;
@@ -81,9 +79,9 @@ export interface VideoAdConfig {
 }
 
 export interface IntegrationsConfig {
-  googleAnalyticsId: string; // e.g., G-XXXXXXXX
-  adSenseId: string; // e.g., pub-XXXXXXXX
-  metaPixelId: string; // e.g., 1234567890
+  googleAnalyticsId: string;
+  adSenseId: string;
+  metaPixelId: string;
 }
 
 export interface CommunityLinks {
@@ -91,20 +89,28 @@ export interface CommunityLinks {
   telegram: string;
 }
 
-export type Theme = 'light' | 'dark' | 'festive' | 'seasonal';
+export interface ThemeColors {
+  primary: string;       // Buttons, Highlights
+  background: string;    // Main Page Background
+  card: string;          // Cards, Modals, Sidebar elements
+  text: string;          // Main Text Color
+  sidebar: string;       // Sidebar/Header Background
+  border: string;        // Borders
+}
 
 export interface SiteConfig {
   storeName: string;
   logoUrl?: string;
-  origin: OriginAddress; // NEW: For shipping calculations
+  origin: OriginAddress;
   currency: 'USD' | 'INR' | 'EUR' | 'GBP';
   currencySymbol: string;
-  theme: Theme;
+  themeMode: 'light' | 'dark' | 'festive' | 'custom'; // For UI Reference
+  colors: ThemeColors;   // ACTUAL SOURCE OF TRUTH FOR STYLING
   hero: HeroConfig;
   brands: string[];
   videoAd: VideoAdConfig;
   integrations: IntegrationsConfig;
-  community: CommunityLinks; // NEW: For WhatsApp/Telegram
+  community: CommunityLinks;
 }
 
 export interface PaymentGateway {

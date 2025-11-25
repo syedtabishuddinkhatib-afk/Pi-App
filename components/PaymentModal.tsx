@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X, CheckCircle, CreditCard, Smartphone, Loader2, Wallet, Building2 } from 'lucide-react';
 import { PaymentSettings } from '../types';
@@ -49,21 +50,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ total, isOpen, onClose, onS
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-scale-up relative">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h3 className="font-bold text-slate-800 text-lg">Secure Checkout</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+      <div className="bg-[var(--color-card)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-scale-up relative border border-[var(--color-border)]">
+        <div className="p-6 border-b border-[var(--color-border)] flex justify-between items-center bg-[var(--color-bg)]">
+          <h3 className="font-bold text-[var(--color-text)] text-lg">Secure Checkout</h3>
+          <button onClick={onClose} className="text-[var(--color-text)] opacity-40 hover:opacity-100"><X size={20} /></button>
         </div>
 
         <div className="p-6">
           <div className="text-center mb-6">
-            <span className="text-slate-500 text-sm">Total Amount</span>
-            <h2 className="text-4xl font-bold text-slate-900 mt-1">{currencySymbol}{total.toFixed(2)}</h2>
+            <span className="text-[var(--color-text)] opacity-60 text-sm">Total Amount</span>
+            <h2 className="text-4xl font-bold text-[var(--color-text)] mt-1">{currencySymbol}{total.toFixed(2)}</h2>
           </div>
 
           <div className="space-y-3 mb-8 max-h-60 overflow-y-auto pr-2">
             {enabledGateways.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 border-2 border-dashed border-slate-100 rounded-xl">
+                <div className="text-center py-8 text-[var(--color-text)] opacity-40 border-2 border-dashed border-[var(--color-border)] rounded-xl">
                     <p>No payment methods available.</p>
                 </div>
             ) : (
@@ -72,7 +73,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ total, isOpen, onClose, onS
                     key={gateway.id}
                     onClick={() => setSelectedMethodId(gateway.id)}
                     className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                        selectedMethodId === gateway.id ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100 hover:border-slate-300'
+                        selectedMethodId === gateway.id ? 'border-[var(--color-primary)] bg-[var(--color-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'
                     }`}
                     >
                     <div className="flex items-center gap-3">
@@ -80,12 +81,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ total, isOpen, onClose, onS
                             {getIcon(gateway.type)}
                         </div>
                         <div className="text-left">
-                             <span className="font-bold text-slate-700 block text-sm">{gateway.name}</span>
-                             {gateway.type === 'upi' && <span className="text-[10px] text-slate-400 uppercase font-bold">UPI Integrated</span>}
-                             {gateway.type === 'netbanking' && <span className="text-[10px] text-slate-400 uppercase font-bold">Secure Gateway</span>}
+                             <span className="font-bold text-[var(--color-text)] block text-sm">{gateway.name}</span>
+                             {gateway.type === 'upi' && <span className="text-[10px] text-[var(--color-text)] opacity-40 uppercase font-bold">UPI Integrated</span>}
+                             {gateway.type === 'netbanking' && <span className="text-[10px] text-[var(--color-text)] opacity-40 uppercase font-bold">Secure Gateway</span>}
                         </div>
                     </div>
-                    {selectedMethodId === gateway.id && <CheckCircle size={20} className="text-indigo-600" />}
+                    {selectedMethodId === gateway.id && <CheckCircle size={20} className="text-[var(--color-primary)]" />}
                     </button>
                 ))
             )}
@@ -94,12 +95,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ total, isOpen, onClose, onS
           <button 
             onClick={handlePay}
             disabled={processing || !selectedMethodId}
-            className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[var(--color-primary)] text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {processing ? <Loader2 className="animate-spin" /> : 'Pay Now'}
           </button>
           
-          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-[var(--color-text)] opacity-40">
              <Smartphone size={12} />
              <span>Encrypted 256-bit secure transaction</span>
           </div>
