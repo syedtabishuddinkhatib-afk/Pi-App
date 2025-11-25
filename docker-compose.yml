@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # The React Frontend (Served via Nginx)
+  web:
+    build: .
+    ports:
+      - "80:80"
+    restart: always
+    environment:
+      - API_KEY=${API_KEY}
+    depends_on:
+      - db
+
+  # The PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: pi_admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: pishop_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
