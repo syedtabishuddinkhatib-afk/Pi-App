@@ -44,7 +44,10 @@ const Layout: React.FC<LayoutProps> = ({
 
   const handleAdminAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === 'admin123') {
+    // Validate against configured password or default fallback
+    const validPassword = siteConfig.database.adminPassword || 'admin';
+    
+    if (passwordInput === validPassword) {
       onAdminLogin();
       setAdminModalOpen(false);
       setPasswordInput('');
@@ -131,14 +134,16 @@ const Layout: React.FC<LayoutProps> = ({
             <div className="flex items-center gap-3">
                  {user ? (
                    <div className="flex items-center gap-2 bg-[var(--color-bg)] border border-[var(--color-border)] py-1.5 px-3 rounded-full">
-                      {user.avatar ? (
-                        <img src={user.avatar} alt="User" className="w-6 h-6 rounded-full" />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-xs font-bold">
-                          {user.name.charAt(0)}
-                        </div>
-                      )}
-                      <span className="text-xs font-bold text-[var(--color-text)] hidden md:block">{user.name}</span>
+                      <Link to="/profile" className="flex items-center gap-2 hover:opacity-80">
+                          {user.avatar ? (
+                            <img src={user.avatar} alt="User" className="w-6 h-6 rounded-full" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-xs font-bold">
+                              {user.name.charAt(0)}
+                            </div>
+                          )}
+                          <span className="text-xs font-bold text-[var(--color-text)] hidden md:block">{user.name}</span>
+                      </Link>
                       <button onClick={onUserLogout} className="ml-2 text-[var(--color-text)] opacity-50 hover:text-red-500 hover:opacity-100"><LogOut size={14} /></button>
                    </div>
                  ) : (
@@ -184,13 +189,15 @@ const Layout: React.FC<LayoutProps> = ({
                   
                   {user && (
                     <div className="mb-8 p-4 bg-[var(--color-bg)] rounded-xl flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold text-lg">
-                          {user.avatar ? <img src={user.avatar} className="w-full h-full rounded-full" /> : user.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-[var(--color-text)]">{user.name}</p>
-                          <p className="text-xs text-[var(--color-text)] opacity-60">{user.email}</p>
-                        </div>
+                        <Link to="/profile" className="flex items-center gap-3 w-full" onClick={() => setSidebarOpen(false)}>
+                            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold text-lg">
+                              {user.avatar ? <img src={user.avatar} className="w-full h-full rounded-full" /> : user.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-bold text-[var(--color-text)]">{user.name}</p>
+                              <p className="text-xs text-[var(--color-text)] opacity-60">View Profile</p>
+                            </div>
+                        </Link>
                     </div>
                   )}
 
@@ -307,7 +314,7 @@ const Layout: React.FC<LayoutProps> = ({
                     </form>
                     
                     <div className="mt-4 pt-4 border-t border-[var(--color-border)] text-center">
-                        <p className="text-xs text-[var(--color-text)] opacity-50">Default password: <code className="bg-[var(--color-bg)] px-1 py-0.5 rounded font-mono">admin123</code></p>
+                        <p className="text-xs text-[var(--color-text)] opacity-50">Default password: <code className="bg-[var(--color-bg)] px-1 py-0.5 rounded font-mono">admin</code></p>
                     </div>
                 </div>
           </div>

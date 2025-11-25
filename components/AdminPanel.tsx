@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Product, SiteConfig, PaymentSettings, DeliveryProviderConfig, ThemeColors } from '../types';
-import { Trash2, Plus, Image as ImageIcon, Save, X, Pen, RefreshCw, Package, Megaphone, CreditCard, DollarSign, Layout, MonitorPlay, ToggleLeft, ToggleRight, Smartphone, Truck, Settings, Upload, List, Globe, BarChart3, Radio, Share2, MapPin, Users, Send, Loader2, Palette } from 'lucide-react';
+import { Product, SiteConfig, PaymentSettings, DeliveryProviderConfig, ThemeColors, DatabaseConfig, CustomerLead, MarketingConfig } from '../types';
+import { Trash2, Plus, Image as ImageIcon, Save, X, Pen, RefreshCw, Package, Megaphone, CreditCard, DollarSign, Layout, MonitorPlay, ToggleLeft, ToggleRight, Smartphone, Truck, Settings, Upload, List, Globe, BarChart3, Radio, Share2, MapPin, Users, Send, Loader2, Palette, Database, Server, Terminal, ShieldCheck, Mail, Download, Key, AtSign, CheckSquare, Square } from 'lucide-react';
 import { syncCatalogToMeta } from '../services/socialSyncApi';
 
 interface AdminPanelProps {
@@ -15,6 +15,7 @@ interface AdminPanelProps {
   setPaymentSettings: React.Dispatch<React.SetStateAction<PaymentSettings>>;
   deliveryProviders: DeliveryProviderConfig[];
   setDeliveryProviders: React.Dispatch<React.SetStateAction<DeliveryProviderConfig[]>>;
+  customers: CustomerLead[];
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ 
@@ -22,9 +23,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   categories, setCategories,
   siteConfig, setSiteConfig,
   paymentSettings, setPaymentSettings,
-  deliveryProviders, setDeliveryProviders
+  deliveryProviders, setDeliveryProviders,
+  customers
 }) => {
-  const [activeTab, setActiveTab] = useState<'inventory' | 'marketing' | 'payments' | 'delivery' | 'settings' | 'integrations'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'marketing' | 'payments' | 'delivery' | 'settings' | 'integrations' | 'system'>('inventory');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
@@ -50,6 +52,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // --- SYNC STATE ---
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<string | null>(null);
+  const [dbStatus, setDbStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
+
+  // --- CAMPAIGN STATE ---
+  const [campaignMessage, setCampaignMessage] = useState('');
+  const [campaignMedia, setCampaignMedia] = useState('');
+  const [sendingCampaign, setSendingCampaign] = useState(false);
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState<Set<string>>(new Set());
 
   // --- HANDLERS FOR CATEGORIES ---
   const handleAddCategory = () => {
@@ -221,6 +230,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }));
   };
 
+  const updateDatabase = (field: keyof DatabaseConfig, value: any) => {
+      setSiteConfig(prev => ({
+          ...prev,
+          database: {
+              ...prev.database,
+              [field]: value
+          }
+      }));
+  };
+
+  const updateMarketing = (field: keyof MarketingConfig, value: any) => {
+    setSiteConfig(prev => ({
+        ...prev,
+        marketing: {
+            ...prev.marketing,
+            [field]: value
+        }
+    }));
+  };
+
+  const handleTestDbConnection = () => {
+    setDbStatus('connecting');
+    setTimeout(() => {
+        // Simulate success connection
+        setDbStatus('connected');
+    }, 2500);
+  };
+
   // --- THEME COLOR HANDLER ---
   const updateThemeColor = (colorKey: keyof ThemeColors, value: string) => {
       setSiteConfig(prev => ({
@@ -264,6 +301,49 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
+  // --- MARKETING LEAD SELECTION LOGIC ---
+  const toggleCustomerSelection = (id: string) => {
+    const newSelection = new Set(selectedCustomerIds);
+    if (newSelection.has(id)) {
+        newSelection.delete(id);
+    } else {
+        newSelection.add(id);
+    }
+    setSelectedCustomerIds(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedCustomerIds.size === customers.length) {
+        setSelectedCustomerIds(new Set());
+    } else {
+        setSelectedCustomerIds(new Set(customers.map(c => c.id)));
+    }
+  };
+
+  const handleSendCampaign = () => {
+      if (!campaignMessage || selectedCustomerIds.size === 0) return;
+      setSendingCampaign(true);
+      setTimeout(() => {
+          setSendingCampaign(false);
+          setCampaignMessage('');
+          setCampaignMedia('');
+          alert(`Success! Message sent to ${selectedCustomerIds.size} leads via ${siteConfig.marketing.provider === 'twilio' ? 'Twilio API' : 'WhatsApp Cloud API'}.`);
+      }, 2000);
+  };
+
+  const handleDownloadCsv = () => {
+      const headers = ['ID', 'Name', 'Email', 'Phone', 'Total Spent'];
+      const rows = customers.map(c => [c.id, c.name, c.email, c.phone, c.totalSpent].join(','));
+      const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "customer_leads.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  };
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 min-h-[80vh] pb-20">
        
@@ -280,7 +360,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
              { id: 'integrations', label: 'Integrations', icon: <BarChart3 size={20} /> },
              { id: 'marketing', label: 'Marketing', icon: <Megaphone size={20} /> },
              { id: 'payments', label: 'Payments', icon: <CreditCard size={20} /> },
-             { id: 'settings', label: 'Settings', icon: <Settings size={20} /> }
+             { id: 'settings', label: 'Settings', icon: <Settings size={20} /> },
+             { id: 'system', label: 'System & DB', icon: <Server size={20} /> }
            ].map(tab => (
                <button 
                 key={tab.id}
@@ -367,6 +448,317 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                 </div>
             </div>
+          )}
+
+          {/* --- MARKETING TAB --- */}
+          {activeTab === 'marketing' && (
+              <div className="space-y-6 animate-fade-in">
+                  
+                  {/* CAMPAIGN CONFIGURATION (PROVIDERS) */}
+                  <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm">
+                      <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2 mb-4"><Settings size={20} className="text-[var(--color-primary)]"/> Campaign Configuration</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div className="space-y-3">
+                               <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase flex items-center gap-2"><Smartphone size={14}/> WhatsApp API Provider</label>
+                               <select 
+                                  value={siteConfig.marketing.provider}
+                                  onChange={(e) => updateMarketing('provider', e.target.value)}
+                                  className="w-full bg-white border border-slate-300 rounded p-2 text-slate-900"
+                               >
+                                  <option value="twilio">Twilio (Recommended)</option>
+                                  <option value="interakt">Interakt / Gupshup</option>
+                                  <option value="meta_cloud">Meta Cloud API (Direct)</option>
+                               </select>
+
+                               <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase mt-2 block">Sender Phone Number</label>
+                               <input 
+                                  type="text" 
+                                  value={siteConfig.marketing.whatsappNumber}
+                                  onChange={(e) => updateMarketing('whatsappNumber', e.target.value)}
+                                  placeholder="+1 555 0123"
+                                  className="w-full bg-white border border-slate-300 rounded p-2 text-slate-900 font-mono"
+                               />
+                           </div>
+                           <div className="space-y-3">
+                               <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase flex items-center gap-2"><AtSign size={14}/> Email SMTP Provider</label>
+                               <select 
+                                  value={siteConfig.marketing.emailProvider}
+                                  onChange={(e) => updateMarketing('emailProvider', e.target.value)}
+                                  className="w-full bg-white border border-slate-300 rounded p-2 text-slate-900"
+                               >
+                                  <option value="sendgrid">SendGrid</option>
+                                  <option value="ses">AWS SES</option>
+                                  <option value="smtp">Custom SMTP</option>
+                               </select>
+                               
+                               <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase mt-2 block">Sender Email Address</label>
+                               <input 
+                                  type="text" 
+                                  value={siteConfig.marketing.emailFrom}
+                                  onChange={(e) => updateMarketing('emailFrom', e.target.value)}
+                                  placeholder="marketing@pishop.ai"
+                                  className="w-full bg-white border border-slate-300 rounded p-2 text-slate-900 font-mono"
+                               />
+                           </div>
+                      </div>
+                  </div>
+
+                  {/* CAMPAIGN MANAGER */}
+                  <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm">
+                      <div className="flex items-center gap-4 mb-4">
+                          <div className="p-3 bg-green-100 text-green-600 rounded-lg">
+                              <Megaphone size={24} />
+                          </div>
+                          <div>
+                             <h2 className="text-xl font-bold text-[var(--color-text)]">Campaign Composer</h2>
+                             <p className="text-[var(--color-text)] opacity-60">Selected Recipients: <strong>{selectedCustomerIds.size}</strong></p>
+                          </div>
+                      </div>
+                      <div className="space-y-3">
+                          <textarea 
+                             className="w-full bg-white border border-slate-300 rounded-lg p-3 text-slate-900 focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                             rows={3}
+                             placeholder="Write your message here... (e.g. 'Flash Sale! 20% off all Raspberry Pi cases this weekend!')"
+                             value={campaignMessage}
+                             onChange={(e) => setCampaignMessage(e.target.value)}
+                          />
+                          
+                          {/* MEDIA ATTACHMENT */}
+                          <div className="flex items-center gap-3">
+                              <div className="flex-1 relative">
+                                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                      <ImageIcon size={16} className="text-slate-400" />
+                                  </div>
+                                  <input 
+                                      type="text" 
+                                      placeholder="Paste Image/Video URL to attach..."
+                                      value={campaignMedia}
+                                      onChange={(e) => setCampaignMedia(e.target.value)}
+                                      className="w-full pl-10 bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm"
+                                  />
+                              </div>
+                          </div>
+
+                          <div className="flex justify-between items-center pt-2">
+                             <p className="text-xs text-[var(--color-text)] opacity-50">Sending from: {siteConfig.marketing.whatsappNumber}</p>
+                             <button 
+                                onClick={handleSendCampaign}
+                                disabled={!campaignMessage || sendingCampaign || selectedCustomerIds.size === 0}
+                                className="bg-[var(--color-primary)] text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 flex items-center gap-2 disabled:opacity-50 transition-all"
+                             >
+                                {sendingCampaign ? <Loader2 className="animate-spin" /> : <Send size={18} />}
+                                Send Campaign
+                             </button>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* CUSTOMER DATA CRM - NOW SELECTABLE */}
+                  <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm">
+                      <div className="flex justify-between items-center mb-6">
+                           <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2"><Users size={20} className="text-[var(--color-primary)]"/> Lead CRM</h3>
+                           <button onClick={handleDownloadCsv} className="text-xs bg-[var(--color-bg)] border border-[var(--color-border)] px-3 py-1.5 rounded flex items-center gap-2 hover:bg-slate-100 font-bold text-[var(--color-text)]">
+                               <Download size={14} /> Export CSV
+                           </button>
+                      </div>
+                      
+                      {customers.length === 0 ? (
+                          <div className="text-center py-8 text-[var(--color-text)] opacity-50 border-2 border-dashed border-[var(--color-border)] rounded-xl">
+                              <p>No customer data collected yet.</p>
+                          </div>
+                      ) : (
+                          <div className="overflow-x-auto">
+                              <table className="w-full text-left text-sm text-[var(--color-text)]">
+                                  <thead className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
+                                      <tr>
+                                          <th className="p-3 w-10">
+                                              <button onClick={toggleSelectAll} className="hover:text-[var(--color-primary)]">
+                                                  {selectedCustomerIds.size === customers.length && customers.length > 0 ? <CheckSquare size={18}/> : <Square size={18}/>}
+                                              </button>
+                                          </th>
+                                          <th className="p-3 opacity-60">Name</th>
+                                          <th className="p-3 opacity-60">Contact</th>
+                                          <th className="p-3 opacity-60">Total Spent</th>
+                                          <th className="p-3 opacity-60">Last Order</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-[var(--color-border)]">
+                                      {customers.map(c => (
+                                          <tr key={c.id} className={selectedCustomerIds.has(c.id) ? 'bg-[var(--color-primary)]/5' : ''}>
+                                              <td className="p-3">
+                                                  <button onClick={() => toggleCustomerSelection(c.id)} className={selectedCustomerIds.has(c.id) ? 'text-[var(--color-primary)]' : 'text-slate-400'}>
+                                                      {selectedCustomerIds.has(c.id) ? <CheckSquare size={18}/> : <Square size={18}/>}
+                                                  </button>
+                                              </td>
+                                              <td className="p-3 font-bold">{c.name}</td>
+                                              <td className="p-3">
+                                                  <div className="flex flex-col">
+                                                      <span>{c.email}</span>
+                                                      <span className="opacity-60 text-xs">{c.phone}</span>
+                                                  </div>
+                                              </td>
+                                              <td className="p-3 font-mono">{siteConfig.currencySymbol}{c.totalSpent.toFixed(2)}</td>
+                                              <td className="p-3 opacity-60 text-xs">{new Date(c.lastOrderDate).toLocaleDateString()}</td>
+                                          </tr>
+                                      ))}
+                                  </tbody>
+                              </table>
+                          </div>
+                      )}
+                  </div>
+
+                  {/* COMMUNITY LINKS */}
+                  <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm">
+                      <h3 className="font-bold text-[var(--color-text)] mb-4 flex items-center gap-2"><Share2 size={20} className="text-[var(--color-primary)]"/> Social Links</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div>
+                              <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase flex items-center gap-1 mb-2">
+                                  <Smartphone size={14} className="text-green-500" /> WhatsApp Group Link
+                              </label>
+                              <input 
+                                  type="text" 
+                                  value={siteConfig.community.whatsapp}
+                                  onChange={(e) => updateCommunity('whatsapp', e.target.value)}
+                                  className="w-full bg-white border border-slate-300 rounded p-3 text-slate-900"
+                              />
+                           </div>
+                           <div>
+                              <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase flex items-center gap-1 mb-2">
+                                  <Send size={14} className="text-blue-500" /> Telegram Channel Link
+                              </label>
+                              <input 
+                                  type="text" 
+                                  value={siteConfig.community.telegram}
+                                  onChange={(e) => updateCommunity('telegram', e.target.value)}
+                                  className="w-full bg-white border border-slate-300 rounded p-3 text-slate-900"
+                              />
+                           </div>
+                      </div>
+                  </div>
+
+                  {/* Existing Ads Config... */}
+                  <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm">
+                       <h3 className="font-bold text-[var(--color-text)] mb-4 flex items-center gap-2"><MonitorPlay size={20} className="text-[var(--color-primary)]"/> Homepage Video Ad</h3>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Ad Title</label>
+                                <input type="text" value={siteConfig.videoAd.title} onChange={(e) => updateVideoAd('title', e.target.value)} className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Thumbnail URL</label>
+                                <input type="text" value={siteConfig.videoAd.imageUrl} onChange={(e) => updateVideoAd('imageUrl', e.target.value)} className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Subtitle</label>
+                                <textarea value={siteConfig.videoAd.subtitle} onChange={(e) => updateVideoAd('subtitle', e.target.value)} className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900 h-20" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input type="checkbox" checked={siteConfig.videoAd.enabled} onChange={(e) => updateVideoAd('enabled', e.target.checked)} className="w-5 h-5 accent-[var(--color-primary)]" />
+                                <span className="font-bold text-[var(--color-text)]">Enable Video Section</span>
+                            </div>
+                       </div>
+                  </div>
+              </div>
+          )}
+
+          {/* --- PAYMENTS TAB (VISIBILITY FIXED) --- */}
+          {activeTab === 'payments' && (
+             <div className="space-y-6 animate-fade-in">
+                 <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm mb-6">
+                      <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Payment Gateways</h2>
+                      <p className="text-[var(--color-text)] opacity-60">Enable and configure payment methods for checkout.</p>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {paymentSettings.gateways.map(gateway => (
+                        <div key={gateway.id} className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-[var(--color-bg)] rounded-lg text-[var(--color-text)]"><CreditCard size={24} /></div>
+                                <div>
+                                    <h3 className="font-bold text-[var(--color-text)]">{gateway.name}</h3>
+                                    <p className="text-xs text-[var(--color-text)] opacity-60 uppercase">{gateway.type}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => toggleGateway(gateway.id)}>
+                                {gateway.enabled ? <ToggleRight className="text-[var(--color-primary)] w-12 h-12" /> : <ToggleLeft className="text-[var(--color-text)] opacity-30 w-12 h-12" />}
+                            </button>
+                        </div>
+                    ))}
+                 </div>
+                 
+                 <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm mt-6">
+                      <h3 className="font-bold text-[var(--color-text)] mb-4 flex items-center gap-2"><Key size={20} className="text-[var(--color-primary)]"/> API Configuration</h3>
+                      <div className="space-y-4">
+                           <div>
+                               <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Razorpay Key ID</label>
+                               <input type="password" placeholder="rzp_live_xxxxxxxx" className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900" />
+                           </div>
+                           <div>
+                               <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Stripe Publishable Key</label>
+                               <input type="password" placeholder="pk_live_xxxxxxxx" className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900" />
+                           </div>
+                      </div>
+                 </div>
+             </div>
+          )}
+
+          {/* --- INTEGRATIONS TAB (VISIBILITY FIXED) --- */}
+          {activeTab === 'integrations' && (
+             <div className="space-y-6 animate-fade-in">
+                 <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm mb-6">
+                      <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">External Integrations</h2>
+                      <p className="text-[var(--color-text)] opacity-60">Connect Google Analytics, AdSense, and Meta Pixel.</p>
+                 </div>
+
+                 <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm space-y-4">
+                      <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2"><Globe size={20} className="text-blue-500"/> Google Services</h3>
+                      <div>
+                          <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Google Analytics 4 Measurement ID</label>
+                          <input 
+                             type="text" 
+                             value={siteConfig.integrations.googleAnalyticsId} 
+                             onChange={(e) => updateIntegration('googleAnalyticsId', e.target.value)}
+                             placeholder="G-XXXXXXXXXX"
+                             className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900"
+                          />
+                      </div>
+                      <div>
+                          <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Google AdSense Publisher ID</label>
+                          <input 
+                             type="text" 
+                             value={siteConfig.integrations.adSenseId} 
+                             onChange={(e) => updateIntegration('adSenseId', e.target.value)}
+                             placeholder="pub-XXXXXXXXXXXXXXXX"
+                             className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900"
+                          />
+                      </div>
+                 </div>
+
+                 <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm space-y-4">
+                      <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2"><Share2 size={20} className="text-indigo-500"/> Meta (Facebook) Business</h3>
+                      <div>
+                          <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Meta Pixel ID</label>
+                          <input 
+                             type="text" 
+                             value={siteConfig.integrations.metaPixelId} 
+                             onChange={(e) => updateIntegration('metaPixelId', e.target.value)}
+                             placeholder="1234567890"
+                             className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900"
+                          />
+                      </div>
+                      <div className="pt-4 border-t border-[var(--color-border)]">
+                          <button 
+                             onClick={handleSocialSync}
+                             disabled={isSyncing || !siteConfig.integrations.metaPixelId}
+                             className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 flex items-center gap-2 disabled:opacity-50"
+                          >
+                             {isSyncing ? <Loader2 className="animate-spin" size={16}/> : <RefreshCw size={16} />}
+                             Sync Catalog to Meta
+                          </button>
+                          {lastSyncResult && <p className="mt-2 text-xs font-mono bg-[var(--color-bg)] p-2 rounded">{lastSyncResult}</p>}
+                      </div>
+                 </div>
+             </div>
           )}
 
           {/* --- DELIVERY TAB (PROVIDERS) --- */}
@@ -627,6 +1019,165 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
               </div>
           )}
+
+          {/* --- SYSTEM TAB (Database & Server) --- */}
+          {activeTab === 'system' && (
+              <div className="space-y-6 animate-fade-in">
+                  <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm mb-6">
+                        <div className="flex items-center gap-4">
+                             <div className="p-3 bg-slate-100 rounded-lg text-slate-600"><Database size={32} /></div>
+                             <div>
+                                <h2 className="text-2xl font-bold text-[var(--color-text)]">System Configuration</h2>
+                                <p className="text-[var(--color-text)] opacity-60">Configure PostgreSQL Backend and Raspberry Pi Server settings.</p>
+                             </div>
+                        </div>
+                  </div>
+                  
+                  {/* ADMIN SECURITY SECTION */}
+                  <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm border-l-4 border-l-red-500">
+                      <h3 className="font-bold text-[var(--color-text)] mb-4 flex items-center gap-2">
+                          <ShieldCheck size={20} className="text-red-500" /> Admin Security
+                      </h3>
+                      <div className="flex items-center gap-4">
+                          <div className="flex-1">
+                              <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Admin Login Password</label>
+                              <input 
+                                  type="text" 
+                                  value={siteConfig.database.adminPassword}
+                                  onChange={(e) => updateDatabase('adminPassword', e.target.value)}
+                                  className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900 font-mono"
+                              />
+                          </div>
+                          <div className="flex-1">
+                              <p className="text-xs text-[var(--color-text)] opacity-60 mt-6">
+                                  <strong>Important:</strong> Changing this password will require you to log in again with the new credentials. Ensure it is strong.
+                              </p>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="lg:col-span-2 bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm">
+                           <h3 className="font-bold text-[var(--color-text)] mb-6 flex items-center gap-2 border-b border-[var(--color-border)] pb-2">
+                               <Server size={20} className="text-[var(--color-primary)]" /> PostgreSQL Connection
+                           </h3>
+                           
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Host IP</label>
+                                    <input 
+                                        type="text" 
+                                        value={siteConfig.database.host}
+                                        onChange={(e) => updateDatabase('host', e.target.value)}
+                                        placeholder="127.0.0.1 or 192.168.x.x"
+                                        className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900 font-mono text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Port</label>
+                                    <input 
+                                        type="text" 
+                                        value={siteConfig.database.port}
+                                        onChange={(e) => updateDatabase('port', e.target.value)}
+                                        placeholder="5432"
+                                        className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900 font-mono text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Database Name</label>
+                                    <input 
+                                        type="text" 
+                                        value={siteConfig.database.databaseName}
+                                        onChange={(e) => updateDatabase('databaseName', e.target.value)}
+                                        className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900 font-mono text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Username</label>
+                                    <input 
+                                        type="text" 
+                                        value={siteConfig.database.username}
+                                        onChange={(e) => updateDatabase('username', e.target.value)}
+                                        className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900 font-mono text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Password</label>
+                                    <input 
+                                        type="password" 
+                                        value={siteConfig.database.password || ''}
+                                        onChange={(e) => updateDatabase('password', e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full bg-white border border-slate-300 rounded p-2 mt-1 text-slate-900 font-mono text-sm"
+                                    />
+                                </div>
+                                <div className="flex flex-col justify-end">
+                                    <div className="flex items-center gap-4">
+                                        <label className="flex items-center gap-2 text-sm text-[var(--color-text)] cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={siteConfig.database.ssl}
+                                                onChange={(e) => updateDatabase('ssl', e.target.checked)}
+                                                className="w-4 h-4" 
+                                            />
+                                            SSL Mode
+                                        </label>
+                                        <label className="flex items-center gap-2 text-sm text-[var(--color-text)] cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={siteConfig.database.autoMigrate}
+                                                onChange={(e) => updateDatabase('autoMigrate', e.target.checked)}
+                                                className="w-4 h-4" 
+                                            />
+                                            Auto-Migrate Schema
+                                        </label>
+                                    </div>
+                                </div>
+                           </div>
+
+                           <div className="mt-8 pt-6 border-t border-[var(--color-border)] flex items-center gap-4">
+                                <button 
+                                    onClick={handleTestDbConnection}
+                                    disabled={dbStatus === 'connecting'}
+                                    className="bg-[var(--color-primary)] text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    {dbStatus === 'connecting' ? <Loader2 className="animate-spin" /> : <Terminal size={18} />}
+                                    Test Connection & Initialize
+                                </button>
+                                {dbStatus === 'connected' && (
+                                    <span className="text-green-600 font-bold flex items-center gap-2 animate-fade-in">
+                                        <ShieldCheck size={20} /> Connection Successful. Schema Migrated.
+                                    </span>
+                                )}
+                           </div>
+                      </div>
+
+                      <div className="bg-[var(--color-card)] p-6 rounded-xl border border-[var(--color-border)] shadow-sm h-fit">
+                           <h3 className="font-bold text-[var(--color-text)] mb-4">Setup Instructions</h3>
+                           <div className="text-sm text-[var(--color-text)] opacity-70 space-y-4 leading-relaxed">
+                               <p>
+                                   To enable persistent storage, install PostgreSQL on your Raspberry Pi:
+                               </p>
+                               <code className="block bg-[var(--color-bg)] p-3 rounded font-mono text-xs border border-[var(--color-border)]">
+                                   sudo apt update<br/>
+                                   sudo apt install postgresql<br/>
+                                   sudo -u postgres psql
+                               </code>
+                               <p>
+                                   Once connected, create the database user and grant permissions. The "Auto-Migrate" feature will handle table creation and indexing for:
+                               </p>
+                               <ul className="list-disc pl-4 space-y-1">
+                                   <li>Products & Categories</li>
+                                   <li>User Profiles</li>
+                                   <li>Order History</li>
+                                   <li>Analytics Logs</li>
+                               </ul>
+                           </div>
+                      </div>
+                  </div>
+              </div>
+          )}
+
        </div>
 
       {/* --- ADD NEW DELIVERY SERVICE MODAL --- */}

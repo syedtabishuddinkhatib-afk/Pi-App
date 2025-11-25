@@ -14,6 +14,16 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
+export interface Order {
+  id: string;
+  date: string;
+  items: CartItem[];
+  total: number;
+  status: 'Processing' | 'Shipped' | 'Delivered';
+  shippingAddress: Address;
+  paymentMethod: string;
+}
+
 export interface SalesData {
   name: string;
   revenue: number;
@@ -36,6 +46,7 @@ export interface Address {
   zipCode: string;
   country: string;
   phone: string;
+  email?: string; // Captured for marketing
 }
 
 export interface OriginAddress {
@@ -98,6 +109,25 @@ export interface ThemeColors {
   border: string;        // Borders
 }
 
+export interface DatabaseConfig {
+  host: string;
+  port: string;
+  username: string;
+  password?: string;
+  databaseName: string;
+  ssl: boolean;
+  autoMigrate: boolean;
+  adminPassword?: string; // REAL ADMIN SECURITY
+}
+
+export interface MarketingConfig {
+  provider: 'twilio' | 'meta_cloud' | 'interakt';
+  whatsappNumber: string; // The "From" Number
+  apiKey: string;
+  emailProvider: 'smtp' | 'ses' | 'sendgrid';
+  emailFrom: string;
+}
+
 export interface SiteConfig {
   storeName: string;
   logoUrl?: string;
@@ -111,6 +141,8 @@ export interface SiteConfig {
   videoAd: VideoAdConfig;
   integrations: IntegrationsConfig;
   community: CommunityLinks;
+  database: DatabaseConfig;
+  marketing: MarketingConfig;
 }
 
 export interface PaymentGateway {
@@ -132,4 +164,14 @@ export interface User {
   avatar?: string;
   provider: 'google' | 'facebook' | 'email';
   savedAddress?: Address;
+  orders: Order[]; // Order History
+}
+
+export interface CustomerLead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  lastOrderDate: string;
+  totalSpent: number;
 }

@@ -7,15 +7,20 @@ import Dashboard from './components/Dashboard';
 import PaymentModal from './components/PaymentModal';
 import AiChat from './components/AiChat';
 import { AdminPanel } from './components/AdminPanel';
+import UserProfile from './components/UserProfile';
 import { fetchDeliveryRates } from './services/deliveryApi';
 import { MOCK_PRODUCTS } from './services/mockData';
-import { Product, CartItem, DeliveryOption, SiteConfig, PaymentSettings, User, Address, DeliveryProviderConfig } from './types';
+import { Product, CartItem, DeliveryOption, SiteConfig, PaymentSettings, User, Address, DeliveryProviderConfig, Order, CustomerLead } from './types';
 import { ShoppingCart, Trash2, ArrowLeft, Truck, Package, MapPin, Home, Play, Volume2, Maximize2, Check, Bell, User as UserIcon, Loader2 } from 'lucide-react';
 
 export default function App() {
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   
+  // --- DATABASE SIMULATION ---
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [customers, setCustomers] = useState<CustomerLead[]>([]);
+
   // --- CATEGORY STATE ---
   const [categories, setCategories] = useState<string[]>(['Electronics', 'Fashion', 'Home & Living', 'Gadgets']);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -31,7 +36,7 @@ export default function App() {
   
   // Checkout & Delivery State
   const [shippingAddress, setShippingAddress] = useState<Address>({
-    fullName: '', street: '', city: '', state: '', zipCode: '', country: '', phone: ''
+    fullName: '', street: '', city: '', state: '', zipCode: '', country: '', phone: '', email: ''
   });
   const [isAddressSet, setIsAddressSet] = useState(false);
   const [loadingRates, setLoadingRates] = useState(false);
@@ -87,6 +92,22 @@ export default function App() {
     community: {
         whatsapp: 'https://chat.whatsapp.com/',
         telegram: 'https://t.me/'
+    },
+    database: {
+        host: 'localhost',
+        port: '5432',
+        username: 'pi_admin',
+        databaseName: 'pishop_db',
+        ssl: false,
+        autoMigrate: true,
+        adminPassword: 'admin' // Default Password
+    },
+    marketing: {
+      provider: 'twilio',
+      whatsappNumber: '+1 555 012 3456',
+      apiKey: '',
+      emailProvider: 'sendgrid',
+      emailFrom: 'newsletter@pishop.ai'
     }
   });
 
@@ -99,16 +120,14 @@ export default function App() {
     ]
   });
 
-  // Helper to show notifications
   const showNotification = (message: string, type: 'success' | 'info' = 'success') => {
     setNotification({ message, type });
-    setTimeout(() => setNotification(null), 5000); // Hide after 5 seconds
+    setTimeout(() => setNotification(null), 5000); 
   };
 
-  // Pre-fill address on login
   useEffect(() => {
     if (user?.savedAddress) {
-      setShippingAddress(user.savedAddress);
+      setShippingAddress({...user.savedAddress, email: user.email});
       setIsAddressSet(true);
     } else {
       setIsAddressSet(false);
@@ -116,7 +135,6 @@ export default function App() {
     }
   }, [user]);
 
-  // Suppress ResizeObserver Loop Error
   useEffect(() => {
     const handleError = (e: ErrorEvent) => {
       if (
@@ -157,13 +175,12 @@ export default function App() {
   };
 
   const handleUserLogin = (provider: 'google' | 'facebook') => {
-    // Simulate Login with Mock Data
     const mockUser: User = {
         id: Date.now().toString(),
         name: 'Demo User',
         email: 'user@example.com',
         provider: provider,
-        // Mock saved address
+        orders: [],
         savedAddress: {
            fullName: 'Demo User',
            street: '123 Raspberry Lane',
@@ -171,18 +188,19 @@ export default function App() {
            state: 'CA',
            zipCode: '94025',
            country: 'USA',
-           phone: '555-0199'
+           phone: '555-0199',
+           email: 'user@example.com'
         }
     };
+    // If we have previous orders for this email, link them (Mock logic)
+    const previousOrders = allOrders.filter(o => o.shippingAddress.email === mockUser.email);
+    mockUser.orders = previousOrders;
+
     setUser(mockUser);
     
-    // Simulate Welcome Automations
     setTimeout(() => {
         showNotification(`📧 Welcome email sent to user@example.com`, 'success');
     }, 1500);
-    setTimeout(() => {
-        showNotification(`💬 Welcome WhatsApp message sent via PiShop Bot`, 'success');
-    }, 3000);
   };
 
   const handleCalculateShipping = async (e: React.FormEvent) => {
@@ -220,19 +238,56 @@ export default function App() {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const clearCart = () => {
-    const orderId = Math.floor(Math.random() * 100000);
+    const orderId = Math.floor(Math.random() * 100000).toString();
+    const newOrder: Order = {
+        id: orderId,
+        date: new Date().toISOString(),
+        items: [...cart],
+        total: cartTotal,
+        status: 'Processing',
+        shippingAddress: { ...shippingAddress },
+        paymentMethod: 'Credit Card' // Mock
+    };
+
+    // 1. SAVE ORDER TO DB
+    setAllOrders(prev => [newOrder, ...prev]);
+
+    // 2. UPDATE USER HISTORY
+    if (user) {
+        setUser(prev => prev ? ({ ...prev, orders: [newOrder, ...prev.orders] }) : null);
+    }
+
+    // 3. CAPTURE MARKETING LEAD (CRM)
+    if (shippingAddress.email && shippingAddress.phone) {
+        setCustomers(prev => {
+            const exists = prev.find(c => c.email === shippingAddress.email);
+            if (exists) {
+                return prev.map(c => c.email === shippingAddress.email ? { ...c, totalSpent: c.totalSpent + cartTotal, lastOrderDate: new Date().toISOString() } : c);
+            }
+            return [...prev, {
+                id: Date.now().toString(),
+                name: shippingAddress.fullName,
+                email: shippingAddress.email!,
+                phone: shippingAddress.phone,
+                lastOrderDate: new Date().toISOString(),
+                totalSpent: cartTotal
+            }];
+        });
+    }
+
     setCart([]);
     setSelectedDelivery(null);
     setPaymentOpen(false);
-    alert(`Order #${orderId} Placed Successfully!`);
     
     setTimeout(() => {
-        showNotification(`📧 Order Confirmation #${orderId} sent to ${user?.email || 'your email'}.`, 'success');
+        showNotification(`📧 Order #${orderId} confirmed! Sent to ${shippingAddress.email || 'email'}.`, 'success');
     }, 1000);
 
-    setTimeout(() => {
-        showNotification(`📱 WhatsApp: "Your Order #${orderId} is confirmed! Track here: bit.ly/pi-${orderId}"`, 'success');
-    }, 2500);
+    if (shippingAddress.phone) {
+        setTimeout(() => {
+            showNotification(`📱 WhatsApp Tracking Link sent to ${shippingAddress.phone}`, 'success');
+        }, 2500);
+    }
   };
 
   const filteredProducts = selectedCategory === 'All' 
@@ -254,7 +309,7 @@ export default function App() {
         <div className="p-6 bg-red-100 text-red-600 rounded-full shadow-lg"><MapPin size={48} /></div>
         <div>
           <h2 className="text-3xl font-bold text-[var(--color-text)]">Restricted Access</h2>
-          <p className="text-[var(--color-text)] opacity-60 mt-2 max-w-md mx-auto">This secured area is for store administrators only. You must verify your identity to proceed.</p>
+          <p className="text-[var(--color-text)] opacity-60 mt-2 max-w-md mx-auto">This secured area is for store administrators only.</p>
         </div>
         
         <div className="flex gap-4">
@@ -286,7 +341,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={
             <div className="space-y-8 pb-20">
-              {/* Dynamic Promo Banner */}
               <div className={`bg-gradient-to-r ${getGradient(siteConfig.hero.gradient)} rounded-2xl p-6 md:p-10 text-white shadow-lg relative overflow-hidden transition-colors duration-500`}>
                 <div className="absolute right-0 top-0 h-full w-1/2 bg-white/5 skew-x-12 transform translate-x-20"></div>
                 <div className="max-w-2xl relative z-10">
@@ -302,7 +356,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Dynamic Brand Ads Section */}
               <div className="space-y-3">
                  <h3 className="text-xs font-bold text-[var(--color-text)] opacity-40 uppercase tracking-widest">Trusted Partners</h3>
                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
@@ -314,7 +367,6 @@ export default function App() {
                  </div>
               </div>
 
-              {/* Sticky Filter Bar */}
               <div className="sticky top-0 z-30 bg-[var(--color-bg)]/90 backdrop-blur-md py-4 border-b border-[var(--color-border)] transition-all shadow-sm -mx-4 px-4 md:-mx-8 md:px-8">
                 <div className="flex flex-wrap gap-2">
                   <button 
@@ -335,7 +387,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Product Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map(product => (
                   <ProductCard 
@@ -353,7 +404,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* Dynamic Video Ads Section */}
               {siteConfig.videoAd.enabled && (
                 <div className="mt-12 bg-black rounded-2xl overflow-hidden shadow-xl relative group cursor-pointer border border-slate-800">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
@@ -398,8 +448,6 @@ export default function App() {
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
                   <div className="lg:col-span-2 space-y-6">
-                    
-                    {/* 1. SHIPPING ADDRESS */}
                     <div className="bg-[var(--color-card)] p-6 rounded-xl shadow-sm border border-[var(--color-border)]">
                         <div className="flex justify-between items-center mb-4">
                            <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2">
@@ -418,16 +466,20 @@ export default function App() {
                                    <input type="text" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.fullName} onChange={e => setShippingAddress({...shippingAddress, fullName: e.target.value})} />
                                 </div>
                                 <div>
-                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Phone</label>
-                                   <input type="tel" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.phone} onChange={e => setShippingAddress({...shippingAddress, phone: e.target.value})} />
+                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Phone (WhatsApp)</label>
+                                   <input type="tel" required placeholder="+1 234..." className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.phone} onChange={e => setShippingAddress({...shippingAddress, phone: e.target.value})} />
                                 </div>
-                                <div className="md:col-span-2">
-                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Street Address</label>
-                                   <input type="text" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.street} onChange={e => setShippingAddress({...shippingAddress, street: e.target.value})} />
+                                <div>
+                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Email</label>
+                                   <input type="email" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.email} onChange={e => setShippingAddress({...shippingAddress, email: e.target.value})} />
                                 </div>
                                 <div>
                                    <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">City</label>
                                    <input type="text" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.city} onChange={e => setShippingAddress({...shippingAddress, city: e.target.value})} />
+                                </div>
+                                <div className="md:col-span-2">
+                                   <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Street Address</label>
+                                   <input type="text" required className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] rounded p-2 mt-1" value={shippingAddress.street} onChange={e => setShippingAddress({...shippingAddress, street: e.target.value})} />
                                 </div>
                                 <div>
                                    <label className="text-xs font-bold text-[var(--color-text)] opacity-60 uppercase">Zip / Post Code</label>
@@ -446,12 +498,11 @@ export default function App() {
                              <p className="font-bold">{shippingAddress.fullName}</p>
                              <p>{shippingAddress.street}</p>
                              <p>{shippingAddress.city}, {shippingAddress.zipCode}</p>
-                             <p>{shippingAddress.phone}</p>
+                             <p>{shippingAddress.phone} • {shippingAddress.email}</p>
                           </div>
                         )}
                     </div>
 
-                    {/* 2. DELIVERY METHODS */}
                     {isAddressSet && (
                       <div className="bg-[var(--color-card)] p-6 rounded-xl shadow-sm border border-[var(--color-border)] animate-fade-in">
                           <h3 className="font-bold text-[var(--color-text)] mb-4 flex items-center gap-2">
@@ -501,7 +552,6 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* 3. CART ITEMS */}
                     <div className="bg-[var(--color-card)] p-4 rounded-xl shadow-sm border border-[var(--color-border)] space-y-4 hover:opacity-100 transition-opacity">
                         <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-2">
                            <h3 className="font-bold text-[var(--color-text)]">Order Items</h3>
@@ -525,7 +575,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Summary */}
                   <div className="space-y-6">
                     <div className="bg-[var(--color-card)] p-6 rounded-xl shadow-sm border border-[var(--color-border)] h-fit sticky top-24">
                         <h3 className="font-bold text-[var(--color-text)] mb-4 text-lg">Order Summary</h3>
@@ -564,6 +613,10 @@ export default function App() {
             </div>
           } />
 
+          <Route path="/profile" element={
+            user ? <UserProfile user={user} currencySymbol={siteConfig.currencySymbol} /> : <Navigate to="/" />
+          } />
+
           <Route path="/dashboard" element={
             isAdmin ? <Dashboard currencySymbol={siteConfig.currencySymbol} siteConfig={siteConfig} /> : <RestrictedAccess />
           } />
@@ -581,6 +634,7 @@ export default function App() {
                 setPaymentSettings={setPaymentSettings}
                 deliveryProviders={deliveryProviders}
                 setDeliveryProviders={setDeliveryProviders}
+                customers={customers}
               />
             ) : (
               <RestrictedAccess />
@@ -600,7 +654,6 @@ export default function App() {
           currencySymbol={siteConfig.currencySymbol}
         />
 
-        {/* NOTIFICATION TOAST OVERLAY */}
         {notification && (
             <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100] animate-fade-in w-[90%] max-w-md">
                 <div className={`shadow-2xl rounded-xl p-4 flex items-start gap-3 ${notification.type === 'success' ? 'bg-slate-900 text-white' : 'bg-white text-slate-800 border border-slate-200'}`}>
