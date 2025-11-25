@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Home, LayoutDashboard, Menu, X, Bot, Lock, Unlock, LogOut, Package, User as UserIcon, LogIn, Facebook, Mail } from 'lucide-react';
+import { ShoppingBag, Home, LayoutDashboard, Menu, X, Bot, Lock, Unlock, LogOut, Package, User as UserIcon, LogIn, Facebook, Mail, MessageCircle, Send as SendIcon } from 'lucide-react';
 import { SiteConfig, User } from '../types';
 
 interface LayoutProps {
@@ -98,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({
   const logoColor = siteConfig.theme === 'festive' ? 'bg-red-600' : 'bg-indigo-600';
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-500 ${themeClass}`}>
+    <div className={`min-h-screen font-sans transition-colors duration-500 ${themeClass} flex flex-col`}>
       
       {/* HEADER */}
       <header className={`fixed top-0 left-0 right-0 backdrop-blur-md border-b z-40 transition-all duration-300 ${headerClass} ${showHeader ? 'translate-y-0' : '-translate-y-full'}`}>
@@ -235,9 +236,50 @@ const Layout: React.FC<LayoutProps> = ({
       )}
 
       {/* MAIN CONTENT */}
-      <main className="max-w-7xl mx-auto px-4 pt-24 pb-12 min-h-screen">
+      <main className="max-w-7xl mx-auto px-4 pt-24 pb-12 flex-1 w-full">
         {children}
       </main>
+      
+      {/* FOOTER - Community & Contact */}
+      <footer className={`${siteConfig.theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} border-t pt-10 pb-6`}>
+         <div className="max-w-7xl mx-auto px-4">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                 <div>
+                     <h3 className={`font-bold text-lg mb-4 ${siteConfig.theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>About {siteConfig.storeName}</h3>
+                     <p className={`text-sm ${siteConfig.theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                         Your trusted destination for Raspberry Pi accessories, gadgets, and sustainable tech. 
+                         Join our community for daily deals and tech support.
+                     </p>
+                 </div>
+                 
+                 <div>
+                     <h3 className={`font-bold text-lg mb-4 ${siteConfig.theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Join the Community</h3>
+                     <div className="flex flex-col gap-3">
+                         <a href={siteConfig.community.whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium">
+                             <MessageCircle size={20} /> Join WhatsApp Group
+                         </a>
+                         <a href={siteConfig.community.telegram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-500 hover:text-blue-600 font-medium">
+                             <SendIcon size={20} /> Join Telegram Channel
+                         </a>
+                     </div>
+                 </div>
+                 
+                 <div>
+                    <h3 className={`font-bold text-lg mb-4 ${siteConfig.theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Secure Shopping</h3>
+                    <div className="flex gap-2 mb-2">
+                        <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600">SSL Encrypted</div>
+                        <div className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-600">Verified</div>
+                    </div>
+                    <p className={`text-xs ${siteConfig.theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                        All transactions are secure and encrypted. Delivery calculated from {siteConfig.origin.city}, {siteConfig.origin.country}.
+                    </p>
+                 </div>
+             </div>
+             <div className={`text-center text-xs border-t pt-6 ${siteConfig.theme === 'dark' ? 'border-slate-800 text-slate-500' : 'border-slate-100 text-slate-400'}`}>
+                 &copy; {new Date().getFullYear()} {siteConfig.storeName}. Powered by Raspberry Pi & Gemini AI.
+             </div>
+         </div>
+      </footer>
 
       {/* AI CHAT FLOATING ACTION BUTTON */}
       {!location.pathname.includes('ai-assistant') && (

@@ -51,6 +51,13 @@ export default function App() {
     currency: 'USD',
     currencySymbol: '$',
     theme: 'light',
+    origin: {
+        street: '123 Tech Park',
+        city: 'San Francisco',
+        state: 'CA',
+        zipCode: '94000',
+        country: 'USA'
+    },
     hero: {
       title: "Summer Tech Sale",
       subtitle: "Upgrade your Raspberry Pi setup with our latest gadgets. Limited stock available.",
@@ -68,6 +75,10 @@ export default function App() {
       googleAnalyticsId: '',
       adSenseId: '',
       metaPixelId: ''
+    },
+    community: {
+        whatsapp: 'https://chat.whatsapp.com/',
+        telegram: 'https://t.me/'
     }
   });
 
@@ -179,7 +190,10 @@ export default function App() {
     try {
       // Filter only enabled providers to send to the API simulation
       const activeProviders = deliveryProviders.filter(p => p.enabled);
-      const rates = await fetchDeliveryRates(shippingAddress, activeProviders);
+      
+      // PASS ORIGIN ADDRESS FOR ZONE CALCULATION
+      const rates = await fetchDeliveryRates(shippingAddress, siteConfig.origin, activeProviders);
+      
       setCalculatedDeliveryOptions(rates);
       if (rates.length > 0) setSelectedDelivery(rates[0]);
     } catch (error) {
@@ -417,6 +431,9 @@ export default function App() {
                                    <label className="text-xs font-bold text-slate-500 uppercase">Zip / Post Code</label>
                                    <input type="text" required className="w-full bg-white border border-slate-300 rounded p-2 mt-1" value={shippingAddress.zipCode} onChange={e => setShippingAddress({...shippingAddress, zipCode: e.target.value})} />
                                 </div>
+                             </div>
+                             <div className="bg-indigo-50 p-3 rounded-lg text-indigo-800 text-xs mt-2">
+                                <span className="font-bold">Note:</span> Shipping rates will be calculated based on distance from our warehouse in <strong>{siteConfig.origin.city}</strong>.
                              </div>
                              <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors">
                                 Calculate Shipping Rates

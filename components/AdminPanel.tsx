@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { Product, SiteConfig, PaymentSettings, DeliveryProviderConfig } from '../types';
-import { Trash2, Plus, Image as ImageIcon, Save, X, Pen, RefreshCw, Package, Megaphone, CreditCard, DollarSign, Layout, MonitorPlay, ToggleLeft, ToggleRight, Smartphone, Truck, Settings, Upload, List, Globe, BarChart3, Radio } from 'lucide-react';
+import { Trash2, Plus, Image as ImageIcon, Save, X, Pen, RefreshCw, Package, Megaphone, CreditCard, DollarSign, Layout, MonitorPlay, ToggleLeft, ToggleRight, Smartphone, Truck, Settings, Upload, List, Globe, BarChart3, Radio, Share2, MapPin, Users, Send, Loader2 } from 'lucide-react';
+import { syncCatalogToMeta } from '../services/socialSyncApi';
 
 interface AdminPanelProps {
   products: Product[];
@@ -45,6 +46,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     name: '', baseRate: 0, perKmRate: 0, speedLabel: '', enabled: true
   });
   const [isProviderFormOpen, setIsProviderFormOpen] = useState(false);
+
+  // --- SYNC STATE ---
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState<string | null>(null);
 
   // --- HANDLERS FOR CATEGORIES ---
   const handleAddCategory = () => {
@@ -196,6 +201,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }));
   };
 
+  const updateOrigin = (field: string, value: string) => {
+      setSiteConfig(prev => ({
+          ...prev,
+          origin: {
+              ...prev.origin,
+              [field]: value
+          }
+      }));
+  };
+
+  const updateCommunity = (field: 'whatsapp' | 'telegram', value: string) => {
+      setSiteConfig(prev => ({
+          ...prev,
+          community: {
+              ...prev.community,
+              [field]: value
+          }
+      }));
+  };
+
+  const handleSocialSync = async () => {
+    setIsSyncing(true);
+    setLastSyncResult(null);
+    try {
+        const result = await syncCatalogToMeta(products, siteConfig.integrations);
+        setLastSyncResult(`Success! ${result.syncedCount} items pushed to Meta Commerce Manager.`);
+    } catch (e: any) {
+        setLastSyncResult(`Error: ${e.message}`);
+    } finally {
+        setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 min-h-[80vh] pb-20">
        
@@ -339,6 +377,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         </button>
                    </div>
 
+                   {/* ORIGIN SETTINGS */}
+                   <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm mb-6">
+                        <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-4"><MapPin size={20} className="text-blue-600"/> Shop Origin Address</h3>
+                        <p className="text-xs text-slate-500 mb-4">Shipping distance is calculated from this location.</p>
+                        <div className="grid grid-cols-2 gap-4">
+                             <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase">City</label>
+                                <input 
+                                    type="text" 
+                                    value={siteConfig.origin.city}
+                                    onChange={(e) => updateOrigin('city', e.target.value)}
+                                    className="w-full bg-white border border-slate-300 rounded p-2 mt-1"
+                                />
+                             </div>
+                             <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase">Zip / Post Code</label>
+                                <input 
+                                    type="text" 
+                                    value={siteConfig.origin.zipCode}
+                                    onChange={(e) => updateOrigin('zipCode', e.target.value)}
+                                    className="w-full bg-white border border-slate-300 rounded p-2 mt-1"
+                                />
+                             </div>
+                        </div>
+                   </div>
+
                     <div className="grid grid-cols-1 gap-4">
                         {deliveryProviders.map(provider => (
                              <div key={provider.id} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -412,6 +476,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* SOCIAL CATALOG SYNC */}
+                      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4 md:col-span-2">
+                          <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-2">
+                              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                                  <Share2 size={24} />
+                              </div>
+                              <div>
+                                  <h3 className="font-bold text-slate-800">Catalog Sync Center</h3>
+                                  <p className="text-xs text-slate-500">Push your {products.length} products to Meta (Facebook & Instagram).</p>
+                              </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                              <div className="text-sm text-slate-600">
+                                  <p>Ensure a valid Pixel ID is set below.</p>
+                                  {lastSyncResult && (
+                                      <p className={`mt-2 font-bold ${lastSyncResult.startsWith('Error') ? 'text-red-500' : 'text-green-600'}`}>
+                                          {lastSyncResult}
+                                      </p>
+                                  )}
+                              </div>
+                              <button 
+                                onClick={handleSocialSync} 
+                                disabled={isSyncing || !siteConfig.integrations.metaPixelId}
+                                className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                              >
+                                {isSyncing ? <Loader2 className="animate-spin" size={18} /> : <Share2 size={18} />}
+                                {isSyncing ? 'Syncing...' : 'Sync Catalog Now'}
+                              </button>
+                          </div>
+                      </div>
+
                       {/* GOOGLE ANALYTICS */}
                       <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
                           <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-2">
@@ -529,6 +624,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <option value="emerald">Emerald/Teal (Eco)</option>
                                 <option value="rose">Rose/Pink (Valentines)</option>
                             </select>
+                        </div>
+                    </div>
+
+                    {/* COMMUNITY LINKS */}
+                    <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
+                         <div className="flex items-center gap-2 text-green-600 font-bold border-b border-slate-100 pb-2 mb-2">
+                            <Users size={20} /> Community Groups
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">WhatsApp Group Link</label>
+                            <input 
+                                type="text" 
+                                placeholder="https://chat.whatsapp.com/..."
+                                value={siteConfig.community.whatsapp}
+                                onChange={(e) => updateCommunity('whatsapp', e.target.value)}
+                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 focus:ring-2 focus:ring-green-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase">Telegram Channel Link</label>
+                            <input 
+                                type="text" 
+                                placeholder="https://t.me/..."
+                                value={siteConfig.community.telegram}
+                                onChange={(e) => updateCommunity('telegram', e.target.value)}
+                                className="w-full bg-white border border-slate-300 rounded p-2 mt-1 focus:ring-2 focus:ring-blue-400 outline-none"
+                            />
                         </div>
                     </div>
 

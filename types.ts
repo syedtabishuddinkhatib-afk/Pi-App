@@ -38,6 +38,14 @@ export interface Address {
   phone: string;
 }
 
+export interface OriginAddress {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
 export interface DeliveryOption {
   id: string;
   name: string;
@@ -78,11 +86,17 @@ export interface IntegrationsConfig {
   metaPixelId: string; // e.g., 1234567890
 }
 
+export interface CommunityLinks {
+  whatsapp: string;
+  telegram: string;
+}
+
 export type Theme = 'light' | 'dark' | 'festive' | 'seasonal';
 
 export interface SiteConfig {
   storeName: string;
   logoUrl?: string;
+  origin: OriginAddress; // NEW: For shipping calculations
   currency: 'USD' | 'INR' | 'EUR' | 'GBP';
   currencySymbol: string;
   theme: Theme;
@@ -90,6 +104,7 @@ export interface SiteConfig {
   brands: string[];
   videoAd: VideoAdConfig;
   integrations: IntegrationsConfig;
+  community: CommunityLinks; // NEW: For WhatsApp/Telegram
 }
 
 export interface PaymentGateway {
